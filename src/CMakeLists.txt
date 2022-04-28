@@ -26,6 +26,8 @@ set(SOURCES
     electricalFlow.cpp
     flow.h
     flow.cpp
+    embedding.h
+    embedding.cpp
     ext/utils.hpp
     ext/utils.cpp
     ext/matrix.hpp

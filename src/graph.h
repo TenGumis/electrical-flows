@@ -17,6 +17,8 @@ public:
 
     void addNode(std::shared_ptr<Node> newNode);
     void addEdge(std::shared_ptr<Edge> newEdge);
+
+    void updateFlow(const std::vector<double>& flow);
 };
 
 #endif // _GRAPH_H_

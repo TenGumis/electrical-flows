@@ -9,11 +9,9 @@ class LaplacianMatrix
 public:
     const unsigned int size;
     std::vector<std::vector<double>> v;
- 
-    static LaplacianMatrix toLaplacianMatrix(const Graph& graph, const ElectricalFlow& electricalFlow);
 
-private:
-    LaplacianMatrix(const unsigned int size);
+    LaplacianMatrix() = default;
+    LaplacianMatrix(const Graph& graph, const std::vector<double>& electricalFlow);
 };
 
 #endif // _LAPLACIAN_MATRIX_H_

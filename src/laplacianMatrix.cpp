@@ -1,37 +1,29 @@
 #include "laplacianMatrix.h"
 #include <cassert>
 
-LaplacianMatrix LaplacianMatrix::toLaplacianMatrix(const Graph& graph, const ElectricalFlow& electricalFlow)
+LaplacianMatrix::LaplacianMatrix(const Graph& graph, const std::vector<double>& resistances):
+    size(graph.nodes.size()),
+    v(graph.nodes.size(), std::vector<double>(graph.nodes.size(), 0.0))
 {
-    LaplacianMatrix laplacianMatrix(graph.nodes.size());
-    assert(graph.edges.size() == electricalFlow.resistances.size());
+    assert(graph.edges.size() == resistances.size());
     
     for(const auto edge : graph.edges)
     {
         auto u = edge->from->label;
         auto v = edge->to->label;
-        laplacianMatrix.v[u][v] = -1 / electricalFlow.resistances[edge->id];
+        this->v[u][v] = -1 / resistances[edge->id];
     }
 
     for(int i = 0; i < graph.nodes.size(); i++)
     {
-        laplacianMatrix.v[i][i] =  0.0;
+        this->v[i][i] =  0.0;
         for(const auto edge : graph.nodes[i]->incoming)
         {
-            laplacianMatrix.v[i][i] += 1/electricalFlow.resistances[edge->id];
+            this->v[i][i] += 1/resistances[edge->id];
         }
         for(const auto edge : graph.nodes[i]->outgoing)
         {
-            laplacianMatrix.v[i][i] += 1/electricalFlow.resistances[edge->id];
+            this->v[i][i] += 1/resistances[edge->id];
         }
     }
-
-    return laplacianMatrix;
-}
-
-LaplacianMatrix::LaplacianMatrix(const unsigned int size):
-    size(size),
-    v(size, std::vector<double>(size, 0.0))
-{
-
 }

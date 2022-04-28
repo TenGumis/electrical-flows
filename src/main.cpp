@@ -5,6 +5,7 @@
 #include "minCostFlowGraph.h"
 #include "laplacianMatrix.h"
 #include "flow.h"
+#include "embedding.h"
 #include "ext/matrix.hpp"
 #include "ext/system_solver.hpp"
 #include <iostream>
@@ -24,26 +25,6 @@ std::vector<double> getDemandings(const Graph& graph, double flow)
     result[graph.t->label] = flow;
 
     return result;
-}
-
-std::vector<double> solveLinearSystem(const LaplacianMatrix& laplacianMatrix, const std::vector<double>& demandings)
-{
-    int width = laplacianMatrix.size + 1;
-    int height = laplacianMatrix.size;
-
-    Matrix matrix(width, height, true);
-
-    for (int y = 0; y < laplacianMatrix.size; ++y) {
-        for (int x = 0; x < laplacianMatrix.size; ++x) {
-            matrix.set_field(x, y, laplacianMatrix.v[y][x]);
-        }
-    }
-
-    for (int y = 0; y < height; ++y) {
-        matrix.set_field(width - 1, y, demandings[y]);
-    }
-
-    return SystemSolver::solve(matrix);
 }
 
 Graph getInput(std::istream& inputStream)
@@ -90,27 +71,8 @@ void solution()
 
     auto minCostFlowGraph = MinCostFlowGraph::toMinCostFlowGraph(matchingGraph);
     std::cout << minCostFlowGraph.nodes.size() << std::endl;
-    std::cout << minCostFlowGraph.edges.size() << std::endl;
-
-    std::cerr << "ooeoeoe" << std::endl;
-    auto electricalFlow = ElectricalFlow(graph);
-    std::cerr << "resists:" << std::endl;
-    for(auto r : electricalFlow.resistances)
-    {
-        std::cerr << r << " "; 
-    }
-    std::cerr << std::endl;
-    auto laplacian = LaplacianMatrix::toLaplacianMatrix(graph, electricalFlow);
-    std::cerr << "Laplacian: " << std::endl;
-    for(auto row : laplacian.v)
-    {
-        for(auto elem : row)
-        {
-            std::cerr << elem << " ";
-        }
-        std::cerr << std::endl;
-    }
-    std::cerr << std::endl;
+    std::cout << minCostFlowGraph.edges.size() << std::endl; 
+    
     double flowValue = 4;
     auto demandings = getDemandings(graph, flowValue);
     std::cerr << "demandings: " << std::endl;
@@ -118,17 +80,49 @@ void solution()
     {
         std::cerr << elem << " ";
     }
-    auto potentials = solveLinearSystem(laplacian, demandings);
     double stepSize = getStepSize(graph.edges.size());
-    std::cerr << "stepSize: " << stepSize << std::endl;
-    std::cerr << "potentials: " << std::endl;
-    for(auto elem : potentials)
+    Flow flow(graph.edges.size());
+    Embedding embedding(graph.nodes.size());
+    //input: demandings, 
+
+    int tmp = 1000;
+    while(tmp--)
     {
-        std::cerr << elem << " ";
+
+        //augumenting
+        std::cerr << "-------------------------------------------------------" << std::endl;
+        auto electricalFlow = ElectricalFlow(graph);
+        auto potentials = electricalFlow.computePotentials(demandings, flowValue);
+        std::cerr << "stepSize: " << stepSize << std::endl;
+        std::cerr << "potentials: " << std::endl;
+        for(auto elem : potentials)
+        {
+            std::cerr << elem << " ";
+        }
+        std::cerr << std::endl;
+
+        flow.update(graph, stepSize, potentials, electricalFlow.resistances);
+        embedding.update(graph, stepSize, potentials);
+        graph.updateFlow(flow.v);
+        
+        std::cerr << "flow: " << std::endl;
+        for(auto elem : flow.v)
+        {
+            std::cerr << elem << " ";
+        }
+        std::cerr << std::endl;
+        std::cerr << "embedding: " << std::endl;
+        for(auto elem : embedding.v)
+        {
+            std::cerr << elem << " ";
+        }
+        std::cerr << std::endl;
+
+        //fixing
+
+
+        //sprawdzić niezmiennink couplingu
     }
-    std::cerr << std::endl;
-    Flow flow;
-    flow.update(stepSize, potentials);
 } 
 
 int main()
