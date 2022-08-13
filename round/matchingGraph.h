@@ -19,6 +19,9 @@ public:
                                          const int s,
                                          const int t,
                                          const int flow);
+
+    void toNonPerfectMatching();
+    void toPerfectMatching();
 };
 
 #endif // _MATCHING_GRAPH_H_

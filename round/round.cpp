@@ -15,6 +15,7 @@ void printGraph(const MatchingGraph& matchingGraph)
         for(auto edge: node->edges)
         {
             flow += edge->flow;
+            assert(edge->pNode->id == node->id);
         }
         std::cout << node->id <<" "<< flow << "/" << node->demand << " " << node->edges.size() << std::endl; 
     }
@@ -26,6 +27,7 @@ void printGraph(const MatchingGraph& matchingGraph)
         for(auto edge: node->edges)
         {
             flow += edge->flow;
+            assert(edge->qNode->id == node->id);
         }
         std::cout << node->id <<" "<< flow << "/" << node->demand << " " << node->edges.size() << std::endl; 
     }
@@ -64,9 +66,19 @@ void solve()
     int s, t, flowValue;
     std::cin >> s >> t >> flowValue;
     std::cerr << "Default graph created" << std::endl;
-    auto MatchingGraph = MatchingGraph::toMatchingGraph(nodes, edges, s, t, flowValue);
-    std::cerr << "Matching graph created" << std::endl;
-    printGraph(MatchingGraph);
+    
+    auto matchingGraph = MatchingGraph::toMatchingGraph(nodes, edges, s, t, flowValue);
+    std::cerr << "fractional b-matching graph created" << std::endl;
+    printGraph(matchingGraph);
+
+    matchingGraph.toNonPerfectMatching();
+    std::cerr << "non-perfect matching graph created" << std::endl;
+    printGraph(matchingGraph);
+/*
+    matchingGraph.toPerfectMatching();
+    std::cerr << "perfect matching graph created" << std::endl;
+    printGraph(matchingGraph);
+    */
 }
 
 int main()

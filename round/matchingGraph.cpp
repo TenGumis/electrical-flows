@@ -30,8 +30,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                       edges[i]->flow);
 
         matchingGraph.edges.push_back(newEdge);
-        matchingNodeP->edges.push_back(newEdge);
-        matchingNodeQ->edges.push_back(newEdge);
+        matchingNodeP->edges.push_back(newEdge.get());
+        matchingNodeQ->edges.push_back(newEdge.get());
     }
     std::cerr << "nodes processing" << std::endl;
     for(int i = 0 ; i < nodes.size(); i ++)
@@ -53,8 +53,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                           matchingNodeQ.get());
 
         matchingGraph.edges.push_back(mainNewEdge);
-        matchingNodeP->edges.push_back(mainNewEdge);
-        matchingNodeQ->edges.push_back(mainNewEdge);
+        matchingNodeP->edges.push_back(mainNewEdge.get());
+        matchingNodeQ->edges.push_back(mainNewEdge.get());
 
         //z q wychodzace
         std::cerr << "z q wychodzace" << std::endl;
@@ -69,9 +69,9 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                           outgoingEdge->capacity - outgoingEdge->flow);
 
             matchingGraph.edges.push_back(newEdge);
-            matchingNodeQ->edges.push_back(newEdge);
+            matchingNodeQ->edges.push_back(newEdge.get());
             assert(outgoingEdge->matchingNodeP);
-            outgoingEdge->matchingNodeP->edges.push_back(newEdge);
+            outgoingEdge->matchingNodeP->edges.push_back(newEdge.get());
         }
 
         //do p wchodzace
@@ -86,9 +86,9 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                           incomingEdge->capacity - incomingEdge->flow);
 
             matchingGraph.edges.push_back(newEdge);
-            matchingNodeP->edges.push_back(newEdge);
+            matchingNodeP->edges.push_back(newEdge.get());
             assert(incomingEdge->matchingNodeQ);
-            incomingEdge->matchingNodeQ->edges.push_back(newEdge);
+            incomingEdge->matchingNodeQ->edges.push_back(newEdge.get());
         }
     }
 
@@ -105,8 +105,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                       incomingEdge->capacity - incomingEdge->flow);
 
         matchingGraph.edges.push_back(newEdge);
-        matchingNodePT->edges.push_back(newEdge);
-        incomingEdge->matchingNodeQ->edges.push_back(newEdge);
+        matchingNodePT->edges.push_back(newEdge.get());
+        incomingEdge->matchingNodeQ->edges.push_back(newEdge.get());
     }
     matchingNodePT->demand -= flow;
 
@@ -123,11 +123,95 @@ MatchingGraph MatchingGraph::toMatchingGraph(const std::vector<std::shared_ptr<N
                                                        outgoingEdge->capacity - outgoingEdge->flow);
 
         matchingGraph.edges.push_back(newEdge);
-        matchingNodeQS->edges.push_back(newEdge);
-        outgoingEdge->matchingNodeP->edges.push_back(newEdge);
+        matchingNodeQS->edges.push_back(newEdge.get());
+        outgoingEdge->matchingNodeP->edges.push_back(newEdge.get());
     }
     matchingNodeQS->demand -= flow;
 
     return matchingGraph;
 }
 
+void MatchingGraph::toNonPerfectMatching()
+{
+    std::cerr << "MatchingGraph::toNonPerfectMatching start" << std::endl;
+    std::cerr << "edges processing" << std::endl;
+    for(auto edge : edges)
+    {
+        auto excess = static_cast<int>(edge->flow);
+
+        edge->flow -= excess;
+        edge->pNode->demand -= excess;
+        edge->qNode->demand -= excess;
+    }
+    std::cerr << "nodesP processing" << std::endl;
+    int idCounter = nodesP.size() + nodesQ.size();
+    auto oldNodesSize = nodesP.size(); 
+    for(int j = 0; j < oldNodesSize; j++)
+    {
+        auto node = nodesP[j];
+        assert(node);
+        if(node->demand <= 1)
+        {
+            continue;
+        }
+        std::cerr << "node: " << node->id << " " << node->demand << std::endl;
+
+
+        auto excess = static_cast<int>(node->demand - 1);
+        node->demand = 1;
+        std::vector<MatchingNode*> newNodes;
+        newNodes.push_back(node.get());
+        for(int i = 0; i < excess; i++)
+        {
+            std::cerr << "new node: " << 1 << "/" << excess << std::endl;
+
+            auto newNode = std::make_shared<MatchingNode>(idCounter++, 1);
+            nodesP.push_back(newNode);
+            newNodes.push_back(newNode.get());
+            std::cerr << "xxx " << std::endl;
+        }
+        
+        std::vector<MatchingEdge*> edgesToRedistribute;
+        for(auto edge : node->edges)
+        {
+            edgesToRedistribute.push_back(edge);
+        }
+        node->edges.clear();
+
+        int counter = 0;
+        double flow = 0;
+        for(int i = 0; i < edgesToRedistribute.size(); i++)
+        {
+            auto edge = edgesToRedistribute[i];
+            if(edge->flow + flow <= 1)
+            {
+                flow += edge->flow;
+                edge->pNode = newNodes[counter];
+                newNodes[counter]->edges.push_back(edge);
+            }
+            else
+            {
+                double edgeFlow = edge->flow;
+                
+                edge->pNode = newNodes[counter];
+                edge->flow = 1.0 - flow;
+                newNodes[counter]->edges.push_back(edge);
+
+                flow = flow + edgeFlow - 1;
+                counter++;
+
+                auto newEdge = std::make_shared<MatchingEdge>(newNodes[counter],
+                                                       edge->qNode,
+                                                       flow);
+               
+                edges.push_back(newEdge);
+                newNodes[counter]->edges.push_back(newEdge.get());
+            }
+        }
+    }
+}
+
+void MatchingGraph::toPerfectMatching()
+{
+    
+}

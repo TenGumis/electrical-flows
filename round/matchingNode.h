@@ -16,7 +16,7 @@ public:
 
     int id;
     int demand = 0;
-    std::vector<std::shared_ptr<MatchingEdge>> edges;
+    std::vector<MatchingEdge*> edges;
 
     MatchingNode(int id, int demand = 0);
 };
