@@ -206,12 +206,24 @@ void MatchingGraph::toNonPerfectMatching()
                
                 edges.push_back(newEdge);
                 newNodes[counter]->edges.push_back(newEdge.get());
+                edge->qNode->edges.push_back(newEdge.get());
             }
         }
     }
+
+    std::cerr << "nodesP processing" << std::endl;
+    //TODO
 }
 
 void MatchingGraph::toPerfectMatching()
 {
-    
+    double totalMatching = 0;
+    for(auto edge : edges)
+    {
+        totalMatching += edge->flow;
+    }
+    double dp = nodesP.size() - totalMatching;
+    double dq = nodesQ.size() - totalMatching;
+
+    std::cerr << "dp: " << dp << " dq: " << dq << " total: " << totalMatching << std::endl;
 }

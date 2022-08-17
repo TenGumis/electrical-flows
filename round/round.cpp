@@ -9,34 +9,41 @@
 void printGraph(const MatchingGraph& matchingGraph)
 {
     std::cout << "nodesP: " << matchingGraph.nodesP.size() << std::endl;
+    double totalFlow = 0;
     for(auto node : matchingGraph.nodesP)
     {
         double flow = 0;
         for(auto edge: node->edges)
         {
             flow += edge->flow;
+            totalFlow += edge->flow;
             assert(edge->pNode->id == node->id);
         }
         std::cout << node->id <<" "<< flow << "/" << node->demand << " " << node->edges.size() << std::endl; 
     }
+    std::cout << "totalFlow: " << totalFlow << std::endl;
 
     std::cout << "nodesQ: " << matchingGraph.nodesQ.size() << std::endl;
+    totalFlow = 0;
     for(auto node : matchingGraph.nodesQ)
     {
         double flow = 0;
         for(auto edge: node->edges)
         {
             flow += edge->flow;
+            totalFlow += edge->flow;
             assert(edge->qNode->id == node->id);
         }
         std::cout << node->id <<" "<< flow << "/" << node->demand << " " << node->edges.size() << std::endl; 
     }
+    std::cout << "totalFlow: " << totalFlow << std::endl;
 
     std::cout << "edges: " << matchingGraph.edges.size() << std::endl;
     for(auto edge : matchingGraph.edges)
     {
         std::cout << edge->pNode->id <<" "<< edge->qNode->id << " " << edge->flow << std::endl; 
     }
+    
 }
 
 void solve()
@@ -74,11 +81,11 @@ void solve()
     matchingGraph.toNonPerfectMatching();
     std::cerr << "non-perfect matching graph created" << std::endl;
     printGraph(matchingGraph);
-/*
+
     matchingGraph.toPerfectMatching();
     std::cerr << "perfect matching graph created" << std::endl;
-    printGraph(matchingGraph);
-    */
+    //printGraph(matchingGraph);
+   
 }
 
 int main()
