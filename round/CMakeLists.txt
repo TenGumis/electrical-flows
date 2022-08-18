@@ -21,6 +21,8 @@ set(SOURCES
   matchingNode.h
   node.cpp
   node.h
+  randomnessProvider.h
+  randomnessProvider.cpp
   perfectMatchingFinder.h
   perfectMatchingFinder.cpp
   round.cpp

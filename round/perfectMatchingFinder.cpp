@@ -5,7 +5,13 @@
 #include <algorithm>
 #include <cassert>
 
-void PerfectMatchingFinder::find(MatchingGraph* matchingGraph)
+PerfectMatchingFinder::PerfectMatchingFinder(RandomnessProvider& randomnessProvider):
+    randomnessProvider(randomnessProvider)
+{
+    
+}
+
+void PerfectMatchingFinder::find(MatchingGraph* matchingGraph, RandomnessProvider& randomnessProvider)
 {
     int numberNodesP = matchingGraph->nodesP.size();
     int numberOfSteps = 0;
@@ -29,23 +35,11 @@ void PerfectMatchingFinder::find(MatchingGraph* matchingGraph)
     }
 }
 
-
-
-std::queue<MatchingNode*> PerfectMatchingFinder::getRandomNodesQueue(const std::vector<std::shared_ptr<MatchingNode>>& nodes)
+std::queue<MatchingNode*> PerfectMatchingFinder::getRandomNodesQueue(
+    const std::vector<std::shared_ptr<MatchingNode>>& nodes)
 {
-    std::vector<int> indexes(nodes.size());
-    for(int i = 0; i < indexes.size(); i++)
-    {
-        indexes[i]=i;
-    }
-
-    std::random_device rd;
-    std::mt19937 randomNumberGenerator(rd());
- 
-    std::shuffle(indexes.begin(), indexes.end(), randomNumberGenerator);
-
     std::queue<MatchingNode*> result;
-    for(auto idx : indexes)
+    for(auto idx : randomnessProvider.getRandomPermutation(nodes.size()))
     {
         result.push(nodes[idx].get());
     }
@@ -53,13 +47,16 @@ std::queue<MatchingNode*> PerfectMatchingFinder::getRandomNodesQueue(const std::
     return result;
 }
 
-MatchingNode* PerfectMatchingFinder::sampleOutEdge(MatchingNode* startNode)
+MatchingNode* PerfectMatchingFinder::sampleOutEdge(MatchingNode* currentNode)
 {
-    //TODO
-    return nullptr;
+    auto edge = currentNode->edges[randomnessProvider.getRandomNumber(currentNode->edges.size())];
+    return (currentNode != edge->pNode) ? edge->pNode : edge->qNode;
 }
 
-bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode, int stepsLimit, SuperNodePairs& superNodes, std::list<MatchingNode*>& path)
+bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode,
+                                          int stepsLimit,
+                                          SuperNodePairs& superNodes,
+                                          std::list<MatchingNode*>& path)
 {
     auto currentNodeQ = sampleOutEdge(startNode);
     stepsLimit--;
@@ -82,7 +79,9 @@ bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode, int stepsLimi
     return false;
 }
 
-void PerfectMatchingFinder::updateMatches(const std::list<MatchingNode*>& path, MatchingPairs& matches, SuperNodePairs& superNodes)
+void PerfectMatchingFinder::updateMatches(const std::list<MatchingNode*>& path,
+                                          MatchingPairs& matches,
+                                          SuperNodePairs& superNodes)
 {
     auto currentNodeP = path.begin();
     bool isNodeP = true;
