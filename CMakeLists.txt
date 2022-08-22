@@ -3,6 +3,8 @@ project(electrical_flows)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
 set(SOURCES
     src/main.cpp
     src/node.cpp
@@ -11,18 +13,6 @@ set(SOURCES
     src/graph.h
     src/node.h
     src/edge.h
-    src/matchingEdge.h
-    src/matchingEdge.cpp
-    src/fancyNode.h
-    src/fancyNode.cpp
-    src/matchingGraph.h
-    src/matchingGraph.cpp
-    src/minCostFlowGraph.h
-    src/minCostFlowGraph.cpp
-    src/flowNode.h
-    src/flowNode.cpp
-    src/flowEdge.h
-    src/flowEdge.cpp
     src/laplacianMatrix.h
     src/laplacianMatrix.cpp
     src/electricalFlow.h
@@ -31,15 +21,14 @@ set(SOURCES
     src/flow.cpp
     src/embedding.h
     src/embedding.cpp
-    src/ext/utils.hpp
-    src/ext/utils.cpp
-    src/ext/matrix.hpp
-    src/ext/matrix.cpp
-    src/ext/system_solver.hpp
-    src/ext/system_solver.cpp
+    src/residualGraph.h
+    src/residualGraph.cpp
+    src/demands.h
+    src/demands.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})
+target_link_libraries (electrical-flows Eigen3::Eigen)
 
 enable_testing()
 

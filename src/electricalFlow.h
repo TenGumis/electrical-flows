@@ -1,19 +1,28 @@
 #ifndef _ELECTRICAL_FLOW_H_
 #define _ELECTRICAL_FLOW_H_
 
-#include "graph.h"
+#include "demands.h"
 #include "laplacianMatrix.h"
+#include "residualGraph.h"
+
 #include <vector>
+
+class LaplacianMatrix;
 
 class ElectricalFlow
 {
-public:
-    std::vector<double> resistances;
-    const Graph& residualGraph;
+ public:
+  std::vector<double> resistances;
 
-    ElectricalFlow(const Graph& residualGraph);
+  ElectricalFlow(const ResidualGraph& residualGraph);
 
-    std::vector<double> computePotentials(const std::vector<double>& demandings, double flowValue);
+  std::vector<double> computePotentials(const Graph& graph, const Demands& demandings);
+
+ private:
+  std::vector<double> solveLinearSystem(const LaplacianMatrix& laplacianMatrix, const Demands& demandings);
+  std::vector<double> solveLinearSystemEigen(const Graph& graph,
+                                             const LaplacianMatrix& laplacianMatrix,
+                                             const Demands& demandings);
 };
 
-#endif // _ELECTRICAL_FLOW_H_
+#endif  // _ELECTRICAL_FLOW_H_

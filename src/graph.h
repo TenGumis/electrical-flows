@@ -3,22 +3,20 @@
 
 #include "edge.h"
 #include "node.h"
-#include <vector>
+
 #include <memory>
+#include <vector>
 
 class Graph
 {
-public:
+ public:
+  std::vector<std::shared_ptr<Node>> nodes;
+  std::vector<std::shared_ptr<Edge>> edges;
+  Node* s = nullptr;
+  Node* t = nullptr;
 
-    std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<std::shared_ptr<Edge>> edges;
-    Node* s = nullptr;
-    Node* t = nullptr;
-
-    void addNode(std::shared_ptr<Node> newNode);
-    void addEdge(std::shared_ptr<Edge> newEdge);
-
-    void updateFlow(const std::vector<double>& flow);
+  void addNode(std::shared_ptr<Node> newNode);
+  void addEdge(std::shared_ptr<Edge> newEdge);
 };
 
-#endif // _GRAPH_H_
+#endif  // _GRAPH_H_

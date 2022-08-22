@@ -2,16 +2,17 @@
 #define _EMBEDDING_H_
 
 #include "graph.h"
+
 #include <vector>
 
 class Embedding
 {
-public:
-    std::vector<double> v;
-    
-    Embedding(int size);
+ public:
+  std::vector<double> v;
 
-    void update(const Graph& graph, double stepSize, const std::vector<double>& potentials);
+  Embedding(int size);
+
+  void update(const Graph& graph, double stepSize, const std::vector<double>& potentials);
 };
 
-#endif // _EMBEDDING_H_
+#endif  // _EMBEDDING_H_

@@ -1,15 +1,14 @@
 #include "embedding.h"
 
-Embedding::Embedding(int size):
-    v(size)
+Embedding::Embedding(int size)
+        : v(size)
 {
-
 }
 
 void Embedding::update(const Graph& graph, double stepSize, const std::vector<double>& potentials)
 {
-    for(auto node : graph.nodes)
-    {
-        v[node->label] += stepSize * potentials[node->label]; 
-    }
+  for (auto node : graph.nodes)
+  {
+    v[node->label] += stepSize * potentials[node->label];
+  }
 }

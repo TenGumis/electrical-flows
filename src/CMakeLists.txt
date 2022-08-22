@@ -8,18 +8,6 @@ set(SOURCES
     graph.h
     node.h
     edge.h
-    matchingEdge.h
-    matchingEdge.cpp
-    fancyNode.h
-    fancyNode.cpp
-    matchingGraph.h
-    matchingGraph.cpp
-    minCostFlowGraph.h
-    minCostFlowGraph.cpp
-    flowNode.h
-    flowNode.cpp
-    flowEdge.h
-    flowEdge.cpp
     laplacianMatrix.h
     laplacianMatrix.cpp
     electricalFlow.h
@@ -28,12 +16,8 @@ set(SOURCES
     flow.cpp
     embedding.h
     embedding.cpp
-    ext/utils.hpp
-    ext/utils.cpp
-    ext/matrix.hpp
-    ext/matrix.cpp
-    ext/system_solver.hpp
-    ext/system_solver.cpp
+    residualGraph.h
+    residualGraph.cpp
+    demands.h
+    demands.cpp
 )
-
-add_library(${BINARY}_lib STATIC ${SOURCES})

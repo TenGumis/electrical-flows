@@ -1,74 +1,89 @@
 #include "electricalFlow.h"
-#include "ext/matrix.hpp"
-#include "ext/system_solver.hpp"
+
+#include <Eigen/Dense>
 #include <iostream>
 
-ElectricalFlow::ElectricalFlow(const Graph& residualGraph):
-    resistances(residualGraph.edges.size(), 0.0),
-    residualGraph(residualGraph)
+ElectricalFlow::ElectricalFlow(const ResidualGraph& residualGraph)
+        : resistances(residualGraph.getNumberOfEdges(), 0.0)
 {
-    std::cerr << "size: " << residualGraph.edges.size() << std::endl;
+  std::cerr << "size: " << residualGraph.getNumberOfEdges() << std::endl;
 
-    for(int i = 0; i < residualGraph.edges.size(); i++)
+  for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
+  {
+    auto forwardCapacity = residualGraph.getForwardCapcity(i);
+    auto backwardCapacity = residualGraph.getBackwardCapcity(i);
+    std::cerr << i << ": " << forwardCapacity << " " << backwardCapacity << std::endl;
+    if (forwardCapacity != 0)
     {
-        auto forwardCapacity = residualGraph.edges[i]->forwardCapacity;
-        auto backwardCapacity = residualGraph.edges[i]->backwardCapacity;
-        std::cerr << i << ": " << forwardCapacity << " " << backwardCapacity << std::endl;
-        if (forwardCapacity != 0)
-        {
-            resistances[i] += (1/(forwardCapacity * forwardCapacity));
-        }
-        if (backwardCapacity != 0 )
-        {
-            resistances[i] = (1/(forwardCapacity * forwardCapacity));
-        }
+      resistances[i] += (1 / (forwardCapacity * forwardCapacity));
     }
-
-    std::cerr << "resists:" << std::endl;
-    for(auto r : resistances)
+    if (backwardCapacity != 0)
     {
-        std::cerr << r << " "; 
+      resistances[i] += (1 / (backwardCapacity * backwardCapacity));
     }
-    std::cerr << std::endl;
+  }
 
+  std::cerr << "resists:" << std::endl;
+  for (auto r : resistances)
+  {
+    std::cerr << r << " ";
+  }
+  std::cerr << std::endl;
 }
 
-std::vector<double> solveLinearSystem(const LaplacianMatrix& laplacianMatrix, const std::vector<double>& demandings)
+std::vector<double> ElectricalFlow::solveLinearSystemEigen(const Graph& graph,
+                                                           const LaplacianMatrix& laplacianMatrix,
+                                                           const Demands& demands)
 {
-    int width = laplacianMatrix.size + 1;
-    int height = laplacianMatrix.size;
+  int size = laplacianMatrix.size;
 
-    Matrix matrix(width, height, true);
-
-    for (int y = 0; y < laplacianMatrix.size; ++y) {
-        for (int x = 0; x < laplacianMatrix.size; ++x) {
-            matrix.set_field(x, y, laplacianMatrix.v[y][x]);
-        }
+  Eigen::MatrixXd m(size, size);
+  m(0, 0) = 3;
+  m(1, 0) = 2.5;
+  m(0, 1) = -1;
+  m(1, 1) = m(1, 0) + m(0, 1);
+  for (int row = 0; row < size; ++row)
+  {
+    for (int col = 0; col < size; ++col)
+    {
+      m(row, col) = laplacianMatrix.v[row][col];
     }
+  }
+  std::cerr << "matrix\n" << m << std::endl;
 
-    for (int y = 0; y < height; ++y) {
-        matrix.set_field(width - 1, y, demandings[y]);
-    }
+  Eigen::VectorXd b(size);
+  for (int y = 0; y < size; ++y)
+  {
+    b(y) = demands.getDemand(graph.nodes[y].get());
+  }
+  std::cerr << "demands\n" << b << std::endl;
 
-    return SystemSolver::solve(matrix);
+  Eigen::VectorXd result = m.fullPivLu().solve(b);
+
+  std::cerr << "The solution is:\n" << result << std::endl;
+
+  std::vector<double> tmp(result.data(), result.data() + result.size());
+
+  return tmp;
 }
 
-std::vector<double> ElectricalFlow::computePotentials(const std::vector<double>& demandings, double flowValue)
+std::vector<double> ElectricalFlow::computePotentials(const Graph& graph, const Demands& demands)
 {
-    LaplacianMatrix laplacianMatrix(residualGraph, resistances);
+  LaplacianMatrix laplacianMatrix(graph, resistances);
 
-    /*
-    std::cerr << "Laplacian: " << std::endl;
-    for(auto row : laplacian.v)
-    {
-        for(auto elem : row)
-        {
-            std::cerr << elem << " ";
-        }
-        std::cerr << std::endl;
-    }
-    std::cerr << std::endl;
-    */
+  /*
+  std::cerr << "Laplacian: " << std::endl;
+  for(auto row : laplacianMatrix.v)
+  {
+      for(auto elem : row)
+      {
+          std::cerr << elem << " ";
+      }
+      std::cerr << std::endl;
+  }
+  std::cerr << std::endl;
+  */
 
-    return solveLinearSystem(laplacianMatrix, demandings);
+  // return solveLinearSystem(laplacianMatrix, demands);
+  return solveLinearSystemEigen(graph, laplacianMatrix, demands);
 }
