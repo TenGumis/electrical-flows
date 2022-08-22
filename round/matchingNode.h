@@ -3,8 +3,8 @@
 
 #include "matchingEdge.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 class Edge;
 class Node;
@@ -12,13 +12,12 @@ class MatchingEdge;
 
 class MatchingNode
 {
-public:
+ public:
+  int id;
+  int demand = 0;
+  std::vector<MatchingEdge*> edges;
 
-    int id;
-    int demand = 0;
-    std::vector<MatchingEdge*> edges;
-
-    MatchingNode(int id, int demand = 0);
+  MatchingNode(int id, int demand = 0);
 };
 
-#endif // _MATCHING_NODE_H_
+#endif  // _MATCHING_NODE_H_

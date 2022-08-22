@@ -1,0 +1,28 @@
+---
+BasedOnStyle: google
+
+# AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Allman
+# BreakConstructorInitializers: AfterColon
+ColumnLimit: 120
+ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
+#IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        2
+    SortPriority:    0
+    CaseSensitive:   false
+  - Regex:           '^(<|"(gtest|gmock|isl|json)/)'
+    Priority:        3
+    SortPriority:    0
+    CaseSensitive:   false
+  - Regex:           '.*'
+    Priority:        1
+    SortPriority:    0
+    CaseSensitive:   false
+PackConstructorInitializers: Never
+#PointerAlignment: Left
+...
