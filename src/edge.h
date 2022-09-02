@@ -4,7 +4,6 @@
 #include "node.h"
 
 class Node;
-class FancyNode;
 
 class Edge
 {

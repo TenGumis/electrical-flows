@@ -20,4 +20,11 @@ set(SOURCES
     residualGraph.cpp
     demands.h
     demands.cpp
+    undirectedNode.h
+    undirectedNode.cpp
+    undirectedEdge.h
+    undirectedEdge.cpp
+    undirectedGraph.h
+    undirectedGraph.cpp
+
 )

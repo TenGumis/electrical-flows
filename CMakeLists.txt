@@ -25,6 +25,12 @@ set(SOURCES
     src/residualGraph.cpp
     src/demands.h
     src/demands.cpp
+    src/undirectedNode.h
+    src/undirectedNode.cpp
+    src/undirectedEdge.h
+    src/undirectedEdge.cpp
+    src/undirectedGraph.h
+    src/undirectedGraph.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})

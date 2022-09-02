@@ -3,6 +3,7 @@
 #include "flow.h"
 #include "graph.h"
 #include "laplacianMatrix.h"
+#include "undirectedGraph.h"
 
 #include <cassert>
 #include <cmath>
@@ -10,6 +11,21 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+
+std::vector<double> getCongestionVector(const Graph& graph,
+                                        const ResidualGraph& residualGraph,
+                                        const std::vector<double>& potentials,
+                                        const std::vector<double>& resistances)
+{
+  std::vector<double> congestionVector(graph.edges.size());
+  for (auto edge : graph.edges)
+  {
+    double inducedFlow = (potentials[edge->to->label] - potentials[edge->from->label]) / resistances[edge->id];
+    congestionVector[edge->id] = inducedFlow / residualGraph.getSymmetrizedResidualCapacity(edge.get());
+  }
+
+  return congestionVector;
+}
 
 double geAbsoluteStepSize(const double primalProgress, const double m)
 {
@@ -33,9 +49,8 @@ Graph getInput(std::istream& inputStream)
 
   for (int i = 0; i < numberOfNodes; i++)
   {
-    Node newNode(i);
-
-    graph.addNode(std::make_shared<Node>(newNode));
+    std::shared_ptr<Node> newNode = std::make_shared<Node>(i);
+    graph.addNode(newNode);
   }
 
   for (int i = 0; i < numberOfEdges; i++)
@@ -189,6 +204,20 @@ double getPrimalProgress(const Graph& graph, const Flow& flow, double flowValue)
 void solution()
 {
   auto graph = getInput(std::cin);
+  auto undirectedGraph = UndirectedGraph::fromDirected(graph);
+  assert(undirectedGraph.edges.size() == 6);
+  undirectedGraph.addPreconditioningEdges();
+  assert(undirectedGraph.edges.size() == 12);
+
+  int sum = 0;
+  for (auto edge : undirectedGraph.edges)
+  {
+    sum += edge->capacity;
+    std::cerr << edge->endpoints.first->label << " " << edge->endpoints.second->label << " ";
+    std::cerr << edge->capacity << std::endl;
+  }
+  std::cerr << sum << std::endl;
+  assert(sum == 141);
 
   double flowValue = 4;
   Demands demands(graph, flowValue);

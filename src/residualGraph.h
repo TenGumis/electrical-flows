@@ -17,6 +17,7 @@ class ResidualGraph
 
   double getForwardCapcity(int edgeId) const;
   double getBackwardCapcity(int edgeId) const;
+  double getSymmetrizedResidualCapacity(Edge* edge) const;
   int getNumberOfEdges() const;
   Edge* getEdge(int edgeId) const;
 };
