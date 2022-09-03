@@ -21,7 +21,7 @@ std::vector<double> getCongestionVector(const Graph& graph,
   for (auto edge : graph.edges)
   {
     double inducedFlow = (potentials[edge->to->label] - potentials[edge->from->label]) / resistances[edge->id];
-    congestionVector[edge->id] = inducedFlow / residualGraph.getSymmetrizedResidualCapacity(edge.get());
+    congestionVector[edge->id] = inducedFlow / residualGraph.getSymmetricalResidualCapacity(edge.get());
   }
 
   return congestionVector;
@@ -79,8 +79,8 @@ bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& emb
   std::cerr << "gammaCouplingCheck" << std::endl;
   for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
   {
-    auto forwardCapacity = residualGraph.getForwardCapcity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapcity(i);
+    auto forwardCapacity = residualGraph.getForwardCapacity(i);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
     double potential = 0.0;
 
     if (forwardCapacity != 0)
@@ -114,8 +114,8 @@ std::vector<double> getCorrections(const ResidualGraph& residualGraph, const Emb
 
   for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
   {
-    auto forwardCapacity = residualGraph.getForwardCapcity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapcity(i);
+    auto forwardCapacity = residualGraph.getForwardCapacity(i);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
     double c = 0.0;
     double potential = 0.0;
 

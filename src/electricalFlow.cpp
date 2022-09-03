@@ -10,8 +10,8 @@ ElectricalFlow::ElectricalFlow(const ResidualGraph& residualGraph)
 
   for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
   {
-    auto forwardCapacity = residualGraph.getForwardCapcity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapcity(i);
+    auto forwardCapacity = residualGraph.getForwardCapacity(i);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
     std::cerr << i << ": " << forwardCapacity << " " << backwardCapacity << std::endl;
     if (forwardCapacity != 0)
     {

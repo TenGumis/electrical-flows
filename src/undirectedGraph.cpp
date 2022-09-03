@@ -2,12 +2,12 @@
 
 #include <algorithm>
 
-void UndirectedGraph::addNode(std::shared_ptr<UndirectedNode> newNode)
+void UndirectedGraph::addNode(const std::shared_ptr<UndirectedNode>& newNode)
 {
   this->nodes.push_back(newNode);
 }
 
-void UndirectedGraph::addEdge(std::shared_ptr<UndirectedEdge> newEdge)
+void UndirectedGraph::addEdge(const std::shared_ptr<UndirectedEdge>& newEdge)
 {
   this->edges.push_back(newEdge);
   newEdge->endpoints.first->incident.push_back(newEdge.get());
@@ -21,7 +21,7 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
   std::vector<UndirectedEdge*> sourceEdges(directedGraph.nodes.size());
   std::vector<UndirectedEdge*> targetEdges(directedGraph.nodes.size());
 
-  for (auto node : directedGraph.nodes)
+  for (const auto& node : directedGraph.nodes)
   {
     std::shared_ptr<UndirectedNode> newNode = std::make_shared<UndirectedNode>(node->label);
     undirectedGraph.addNode(newNode);
@@ -32,7 +32,7 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
   undirectedGraph.t = directedGraph.t->undirectedEquivalent;
 
   int edgeIdCounter = 0;
-  for (auto edge : directedGraph.edges)
+  for (const auto& edge : directedGraph.edges)
   {
     std::pair<UndirectedNode*, UndirectedNode*> endpoints{edge->from->undirectedEquivalent,
                                                           edge->to->undirectedEquivalent};
@@ -127,7 +127,7 @@ void UndirectedGraph::updateContractedEdge(UndirectedGraph& undirectedGraph,
 int UndirectedGraph::getMaxCapacity() const
 {
   int maxCapacity = 0;
-  for (auto edge : edges)
+  for (const auto& edge : edges)
   {
     maxCapacity = std::max(maxCapacity, edge->capacity);
   }

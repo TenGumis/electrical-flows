@@ -10,7 +10,7 @@ class Embedding
  public:
   std::vector<double> v;
 
-  Embedding(int size);
+  explicit Embedding(int size);
 
   void update(const Graph& graph, double stepSize, const std::vector<double>& potentials);
 };

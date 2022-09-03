@@ -7,7 +7,7 @@ Embedding::Embedding(int size)
 
 void Embedding::update(const Graph& graph, double stepSize, const std::vector<double>& potentials)
 {
-  for (auto node : graph.nodes)
+  for (const auto& node : graph.nodes)
   {
     v[node->label] += stepSize * potentials[node->label];
   }

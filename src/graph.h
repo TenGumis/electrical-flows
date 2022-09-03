@@ -15,8 +15,8 @@ class Graph
   Node* s = nullptr;
   Node* t = nullptr;
 
-  void addNode(std::shared_ptr<Node> newNode);
-  void addEdge(std::shared_ptr<Edge> newEdge);
+  void addNode(const std::shared_ptr<Node>& newNode);
+  void addEdge(const std::shared_ptr<Edge>& newEdge);
 };
 
 #endif  // _GRAPH_H_

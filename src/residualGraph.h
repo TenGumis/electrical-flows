@@ -15,9 +15,9 @@ class ResidualGraph
 
   ResidualGraph(const Graph& graph, const Flow& flow);
 
-  double getForwardCapcity(int edgeId) const;
-  double getBackwardCapcity(int edgeId) const;
-  double getSymmetrizedResidualCapacity(Edge* edge) const;
+  double getForwardCapacity(int edgeId) const;
+  double getBackwardCapacity(int edgeId) const;
+  double getSymmetricalResidualCapacity(Edge* edge) const;
   int getNumberOfEdges() const;
   Edge* getEdge(int edgeId) const;
 };

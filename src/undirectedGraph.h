@@ -18,8 +18,8 @@ class UndirectedGraph
 
   static UndirectedGraph fromDirected(const Graph& graph);
 
-  void addNode(std::shared_ptr<UndirectedNode> newNode);
-  void addEdge(std::shared_ptr<UndirectedEdge> newEdge);
+  void addNode(const std::shared_ptr<UndirectedNode>& newNode);
+  void addEdge(const std::shared_ptr<UndirectedEdge>& newEdge);
   void addPreconditioningEdges();
 
  private:

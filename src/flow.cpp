@@ -10,7 +10,7 @@ void Flow::update(const Graph& graph,
                   const std::vector<double>& potentials,
                   const std::vector<double>& resistances)
 {
-  for (auto edge : graph.edges)
+  for (const auto& edge : graph.edges)
   {
     double inducedFlow = (potentials[edge->to->label] - potentials[edge->from->label]) / resistances[edge->id];
     v[edge->id] += stepSize * inducedFlow;
@@ -19,7 +19,7 @@ void Flow::update(const Graph& graph,
 
 void Flow::correction(const Graph& graph, const std::vector<double>& corrections)
 {
-  for (auto edge : graph.edges)
+  for (const auto& edge : graph.edges)
   {
     v[edge->id] += corrections[edge->id];
   }

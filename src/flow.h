@@ -10,7 +10,7 @@ class Flow
  public:
   std::vector<double> v;
 
-  Flow(int size);
+  explicit Flow(int size);
 
   void update(const Graph& graph,
               double stepSize,
