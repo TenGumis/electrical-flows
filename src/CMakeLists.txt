@@ -26,5 +26,7 @@ set(SOURCES
     undirectedEdge.cpp
     undirectedGraph.h
     undirectedGraph.cpp
-
+    violation.h
+    violation.cpp
+    helpers.hpp
 )

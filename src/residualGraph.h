@@ -2,7 +2,7 @@
 #define _RESIDUAL_GRAPH_H_
 
 #include "flow.h"
-#include "graph.h"
+#include "undirectedGraph.h"
 
 #include <memory>
 #include <vector>
@@ -10,16 +10,16 @@
 class ResidualGraph
 {
  public:
-  const Graph& graph;
+  const UndirectedGraph& graph;
   const Flow& flow;
 
-  ResidualGraph(const Graph& graph, const Flow& flow);
+  ResidualGraph(const UndirectedGraph& graph, const Flow& flow);
 
-  double getForwardCapacity(int edgeId) const;
-  double getBackwardCapacity(int edgeId) const;
-  double getSymmetricalResidualCapacity(Edge* edge) const;
+  double getForwardCapacity(const std::shared_ptr<UndirectedEdge>& edge, const UndirectedNode* const node) const;
+  double getBackwardCapacity(const std::shared_ptr<UndirectedEdge>& edge, const UndirectedNode* const node) const;
+  double getSymmetricalResidualCapacity(const std::shared_ptr<UndirectedEdge>& edge) const;
   int getNumberOfEdges() const;
-  Edge* getEdge(int edgeId) const;
+  const std::shared_ptr<UndirectedEdge>& getEdge(int edgeId) const;
 };
 
 #endif  // _RESIDUAL_GRAPH_H_

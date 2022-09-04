@@ -2,8 +2,10 @@
 #include "embedding.h"
 #include "flow.h"
 #include "graph.h"
+#include "helpers.hpp"
 #include "laplacianMatrix.h"
 #include "undirectedGraph.h"
+#include "violation.h"
 
 #include <cassert>
 #include <cmath>
@@ -12,16 +14,16 @@
 #include <limits>
 #include <vector>
 
-std::vector<double> getCongestionVector(const Graph& graph,
-                                        const ResidualGraph& residualGraph,
+std::vector<double> getCongestionVector(const ResidualGraph& residualGraph,
                                         const std::vector<double>& potentials,
                                         const std::vector<double>& resistances)
 {
-  std::vector<double> congestionVector(graph.edges.size());
-  for (auto edge : graph.edges)
+  std::vector<double> congestionVector(residualGraph.graph.edges.size());
+  for (const auto& edge : residualGraph.graph.edges)
   {
-    double inducedFlow = (potentials[edge->to->label] - potentials[edge->from->label]) / resistances[edge->id];
-    congestionVector[edge->id] = inducedFlow / residualGraph.getSymmetricalResidualCapacity(edge.get());
+    double inducedFlow = (potentials[edge->endpoints.second->label] - potentials[edge->endpoints.first->label]) /
+                         resistances[edge->id];
+    congestionVector[edge->id] = inducedFlow / residualGraph.getSymmetricalResidualCapacity(edge);
   }
 
   return congestionVector;
@@ -74,36 +76,71 @@ Graph getInput(std::istream& inputStream)
   return graph;
 }
 
-bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& embedding, std::vector<double>& violation)
+template <class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp)
+{
+  // the machine epsilon has to be scaled to the magnitude of the values used
+  // and multiplied by the desired precision in ULPs (units in the last place)
+  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+         // unless the result is subnormal
+         || std::fabs(x - y) < std::numeric_limits<T>::min();
+}
+
+bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& embedding, Violation& violation)
 {
   std::cerr << "gammaCouplingCheck" << std::endl;
-  for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
+  for (const auto& edge : residualGraph.graph.edges)
   {
-    auto forwardCapacity = residualGraph.getForwardCapacity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
+    auto forwardCapacity = residualGraph.getForwardCapacity(edge, edge->endpoints.first);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(edge, edge->endpoints.first);
     double potential = 0.0;
 
-    if (forwardCapacity != 0)
+    if (forwardCapacity != 0)  // TODO dividing by 0
     {
       potential += 1 / forwardCapacity;
     }
-    if (backwardCapacity != 0)
+    if (backwardCapacity != 0)  // TODO dividing by 0
     {
       potential -= 1 / backwardCapacity;
     }
 
-    auto edge = residualGraph.getEdge(i);
-    double stretch = embedding.v[edge->to->label] - embedding.v[edge->from->label];
-
-    std::cerr << forwardCapacity << " " << backwardCapacity << std::endl;
+    double stretch = embedding.getStretch(edge);
+    std::cerr << forwardCapacity << " " << backwardCapacity << " " << stretch << " " << potential << std::endl;
     assert(std::min(forwardCapacity, backwardCapacity) != 0.0);
 
-    if (stretch - potential > violation[edge->id] / std::min(forwardCapacity, backwardCapacity))
+    /*
+    std::streamsize ss = std::cerr.precision();
+    std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2) << std::fabs(stretch -
+    potential) << "\n"; std::cerr << std::fabs(stretch - potential) << std::endl; std::cerr <<
+    violation.getViolation(edge) << std::endl; std::cerr << violation.getViolation(edge) / std::min(forwardCapacity,
+    backwardCapacity) << std::endl; std::cerr << std::setprecision(ss);
+
+    auto tmp = std::fabs(stretch - potential);
+    if(almost_equal(stretch, potential, 100))
+    {
+        tmp = 0.0;
+    }
+    if (tmp > violation.getViolation(edge) / std::min(forwardCapacity, backwardCapacity))
     {
       assert(false);
       return false;
     }
+    */
+    violation.violation[edge->id] = std::fabs(stretch - potential) * std::min(forwardCapacity, backwardCapacity);
   }
+
+  double norm = 0;
+  for (auto elem : violation.violation)
+  {
+    norm += elem * elem;
+  }
+  norm = std::sqrt(norm);
+
+  std::streamsize ss = std::cerr.precision();
+  std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2) << norm << "\n";
+  std::cerr << std::setprecision(ss);
+
+  assert(norm <= 1.0 / 100.);
 
   return true;
 }
@@ -112,10 +149,10 @@ std::vector<double> getCorrections(const ResidualGraph& residualGraph, const Emb
 {
   std::vector<double> corrections(residualGraph.getNumberOfEdges(), 0.0);
 
-  for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
+  for (const auto& edge : residualGraph.graph.edges)
   {
-    auto forwardCapacity = residualGraph.getForwardCapacity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
+    auto forwardCapacity = residualGraph.getForwardCapacity(edge, edge->endpoints.first);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(edge, edge->endpoints.first);
     double c = 0.0;
     double potential = 0.0;
 
@@ -129,9 +166,7 @@ std::vector<double> getCorrections(const ResidualGraph& residualGraph, const Emb
       c += (1 / (backwardCapacity * backwardCapacity));
       potential -= 1 / backwardCapacity;
     }
-
-    auto edge = residualGraph.getEdge(i);
-    double stretch = embedding.v[edge->to->label] - embedding.v[edge->from->label];
+    double stretch = embedding.getStretch(edge);
 
     std::cerr << forwardCapacity << " " << backwardCapacity << std::endl;
     assert(c != 0.0);
@@ -142,30 +177,21 @@ std::vector<double> getCorrections(const ResidualGraph& residualGraph, const Emb
   return corrections;
 }
 
-template <class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp)
+void capacityConstraintCheck(const UndirectedGraph& graph, const Flow& flow)
 {
-  // the machine epsilon has to be scaled to the magnitude of the values used
-  // and multiplied by the desired precision in ULPs (units in the last place)
-  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
-         // unless the result is subnormal
-         || std::fabs(x - y) < std::numeric_limits<T>::min();
-}
-
-void capacityConstraintCheck(const Graph& graph, const Flow& flow)
-{
-  for (auto edge : graph.edges)
+  for (const auto& edge : graph.edges)
   {
-    assert(flow.v[edge->id] <= edge->capacity);
-    assert(flow.v[edge->id] >= -edge->capacity);
+    assert(flow.getFlow(edge.get(), edge->endpoints.first) <= edge->capacity);
+    assert(flow.getFlow(edge.get(), edge->endpoints.first) >= -edge->capacity);
   }
   // -ue- <= fe <= ue+;
 }
 
-void flowConservationConstraintsCheck(const Graph& graph, const Flow& flow, const Demands& demands)
+void flowConservationConstraintsCheck(const UndirectedGraph& graph, const Flow& flow, const Demands& demands)
 {
   for (auto node : graph.nodes)
   {
+    /*
     double enteringFlow = 0.0;
     for (auto edge : node->incoming)
     {
@@ -176,35 +202,58 @@ void flowConservationConstraintsCheck(const Graph& graph, const Flow& flow, cons
     {
       leavingFlow += flow.v[edge->id];
     }
-    assert(almost_equal(enteringFlow - leavingFlow, demands.getDemand(node.get()), 10));
+    */
+    // assert(almost_equal(enteringFlow - leavingFlow, demands.getDemand(node), 10));
   }
 }
 
-void feasibilityCheck(const Graph& graph, const Flow& flow, const Demands& demands)
+void feasibilityCheck(const UndirectedGraph& undirectedGraph, const Flow& flow, const Demands& demands)
 {
   // flowConservationConstraintsCheck(graph, flow, demands);
-  capacityConstraintCheck(graph, flow);
+  capacityConstraintCheck(undirectedGraph, flow);
 }
 
-double getPrimalProgress(const Graph& graph, const Flow& flow, double flowValue)
+double getPrimalProgress(const UndirectedGraph& undirectedGraph, const Flow& flow, double flowValue)
 {
-  double xxx = 0;
-  for (auto edge : graph.s->outgoing)
+  double totalOutFlow = 0.0;
+  for (auto edge : undirectedGraph.source->incident)
   {
-    xxx += flow.v[edge->id];
-  }
-  for (auto edge : graph.s->incoming)
-  {
-    xxx -= flow.v[edge->id];
+    totalOutFlow += flow.getFlow(edge, undirectedGraph.source);
   }
 
-  return xxx / flowValue;
+  return totalOutFlow / flowValue;
 }
 
-void solution()
+double getEtaValue(const double maxCapacity, const double numberOfEdges)
 {
-  auto graph = getInput(std::cin);
-  auto undirectedGraph = UndirectedGraph::fromDirected(graph);
+  double importantFactor = 0;  // TODO change to proper computations
+  return (1.0 / 14.0) - ((1.0 / 7.0) * (log2(maxCapacity) / log2(numberOfEdges))) - importantFactor;
+}
+
+bool isEarlyTerminationPossible(double primalProgress, double flowValue, unsigned int numberOfEdges, double etaValue)
+{
+  return (1 - primalProgress) * flowValue <= std::pow(static_cast<double>(numberOfEdges), 0.5 - etaValue);
+}
+
+bool isFlowValueInfeasible(const ResidualGraph& residualGraph,
+                           const Demands& demands,
+                           const Embedding& embedding,
+                           double primalProgress)
+{
+  double demandedFlow = 0.0;
+  for (const auto& node : residualGraph.graph.nodes)
+  {
+    demandedFlow += demands.getDemand(node) * embedding.getEmbedding(node);
+  }
+
+  return demandedFlow > (2.0 * residualGraph.graph.nodes.size()) / (1 - primalProgress);
+}
+
+bool solution()
+{
+  std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2);
+  auto directedGraph = getInput(std::cin);
+  auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
   assert(undirectedGraph.edges.size() == 6);
   undirectedGraph.addPreconditioningEdges();
   assert(undirectedGraph.edges.size() == 12);
@@ -219,40 +268,63 @@ void solution()
   std::cerr << sum << std::endl;
   assert(sum == 141);
 
-  double flowValue = 4;
-  Demands demands(graph, flowValue);
+  double flowValue = 120;                     // 4;                       // TODO
+  const double etaValue = getEtaValue(0, 0);  // TODO set proper values
+  Demands demands(undirectedGraph, flowValue);
   std::cerr << "demands: " << std::endl;
-  for (auto node : graph.nodes)
+  for (auto node : undirectedGraph.nodes)
   {
-    std::cerr << demands.getDemand(node.get()) << " ";
+    std::cerr << demands.getDemand(node) << " ";
   }
   std::cerr << std::endl;
   double primalProgress = 0.0;
   double dualProgress = 0.0;
-  Flow flow(graph.edges.size());
-  Embedding embedding(graph.nodes.size());
-  ResidualGraph residualGraph(graph, flow);
+  Flow flow(undirectedGraph.edges.size());
+  Embedding embedding(undirectedGraph.nodes.size());
+  Violation violation(undirectedGraph.edges.size());
+  ResidualGraph residualGraph(undirectedGraph, flow);
 
   // int tmp = 20000;  // flowValue/stepSize;
   int steps = 0;
   while (!almost_equal(primalProgress, 1.0, 10) && primalProgress < 1.0)
   {
-    steps++;
+    std::cerr << "STEP: " << steps++ << std::endl;
+    if (steps > 40000) break;
+    gammaCouplingCheck(residualGraph, embedding, violation);
+
+    if (isFlowValueInfeasible(residualGraph, demands, embedding, primalProgress))
+    {
+      std::cerr << "to much flow1111 " << flowValue << std::endl;
+      return false;
+    }
+
+    if (isEarlyTerminationPossible(primalProgress, flowValue, undirectedGraph.edges.size(), etaValue))
+    {
+      /*
+      That is, once we know that we are within an additive factor of m 2 −η of the target ﬂow, we do not
+      execute progress steps anymore. Observe that in that case we can just round our current ﬂow and
+      1
+      compute the optimal solution using at most m 2 −η augmenting paths computation (see, e.g., [43] for
+      details)
+      */
+
+      // round()
+      // performAugmentingPathsComputation() m^(1/2 - etaValue) razy
+    }
     // augumenting
     {
-      // gammaCouplingCheck(graph, embedding, );
-
       std::cerr << "-------------------------------------------------------" << std::endl;
 
-      primalProgress = getPrimalProgress(graph, flow, flowValue);
+      primalProgress = getPrimalProgress(undirectedGraph, flow, flowValue);
       // dualProgress = sigma * y;
       std::cerr << "primalProgress: " << primalProgress << std::endl;
       std::cerr << "dualProgress: " << dualProgress << std::endl;
       std::cerr << "steps: " << steps << std::endl;
 
       auto electricalFlow = ElectricalFlow(residualGraph);
-      auto potentials = electricalFlow.computePotentials(graph, demands);
-      std::cerr << "stepSize: " << geAbsoluteStepSize(primalProgress, graph.edges.size()) << std::endl;
+      auto potentials = electricalFlow.computePotentials(undirectedGraph, demands);
+      printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
+      std::cerr << "stepSize: " << geAbsoluteStepSize(primalProgress, undirectedGraph.edges.size()) << std::endl;
       std::cerr << "potentials: " << std::endl;
       for (auto elem : potentials)
       {
@@ -260,26 +332,13 @@ void solution()
       }
       std::cerr << std::endl;
 
-      double stepSize = geAbsoluteStepSize(primalProgress, graph.edges.size());
-      flow.update(graph, stepSize, potentials, electricalFlow.resistances);
-      embedding.update(graph, stepSize, potentials);
+      double stepSize = geAbsoluteStepSize(primalProgress, undirectedGraph.edges.size());
+      flow.update(undirectedGraph, stepSize, potentials, electricalFlow.resistances);
+      embedding.update(undirectedGraph, stepSize, potentials);
+      printFlow(undirectedGraph, flow);
+      printEmbedding(undirectedGraph, embedding);
 
-      std::cerr << "flow: " << std::endl;
-      for (auto elem : flow.v)
-      {
-        std::streamsize ss = std::cerr.precision();
-        std::cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1) << elem << " ";
-        std::cerr << std::setprecision(ss);
-      }
-      std::cerr << std::endl;
-      std::cerr << "embedding: " << std::endl;
-      for (auto elem : embedding.v)
-      {
-        std::cerr << elem << " ";
-      }
-      std::cerr << std::endl;
-
-      std::cerr << "primalProgress: " << getPrimalProgress(graph, flow, flowValue) << std::endl;
+      std::cerr << "primalProgress: " << getPrimalProgress(undirectedGraph, flow, flowValue) << std::endl;
     }
 
     // fixing
@@ -287,44 +346,34 @@ void solution()
       // gammaCouplingCheck(graph, embedding, );
 
       auto corrections = getCorrections(residualGraph, embedding);
-      std::cerr << "corrections: " << std::endl;
-      for (auto elem : corrections)
-      {
-        std::streamsize ss = std::cerr.precision();
-        std::cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1) << elem << " ";
-        std::cerr << std::setprecision(ss);
-      }
-      std::cerr << std::endl;
-      flow.correction(graph, corrections);
+      printCorrections(corrections);
+
+      flow.correction(undirectedGraph, corrections);
+      printFlow(undirectedGraph, flow);
 
       auto electricalFlow = ElectricalFlow(residualGraph);
-      auto fixingDemands = Demands(graph, corrections);
+      auto fixingDemands = Demands(undirectedGraph, corrections);
       std::cerr << "fixingDemands: " << std::endl;
-      for (auto node : graph.nodes)
+      for (auto node : undirectedGraph.nodes)
       {
         std::streamsize ss = std::cerr.precision();
-        std::cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1) << fixingDemands.getDemand(node.get())
+        std::cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1) << fixingDemands.getDemand(node)
                   << " ";
         std::cerr << std::setprecision(ss);
       }
-      auto potentials = electricalFlow.computePotentials(graph, fixingDemands);
+      auto potentials = electricalFlow.computePotentials(undirectedGraph, fixingDemands);
+      printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
 
-      flow.update(graph, 1.0, potentials, electricalFlow.resistances);
-      embedding.update(graph, 1.0, potentials);
+      flow.update(undirectedGraph, 1.0, potentials, electricalFlow.resistances);
+      embedding.update(undirectedGraph, 1.0, potentials);
 
-      std::cerr << "flow: " << std::endl;
-      for (auto elem : flow.v)
-      {
-        std::streamsize ss = std::cerr.precision();
-        std::cerr << std::setprecision(std::numeric_limits<double>::digits10 + 1) << elem << " ";
-        std::cerr << std::setprecision(ss);
-      }
-      std::cerr << std::endl;
+      printFlow(undirectedGraph, flow);
     }
-    feasibilityCheck(graph, flow, demands);
+    feasibilityCheck(undirectedGraph, flow, demands);
 
     getchar();
   }
+  return true;
 }
 
 int main()

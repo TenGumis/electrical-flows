@@ -8,10 +8,10 @@ class LaplacianMatrix
 {
  public:
   const unsigned int size;
-  std::vector<std::vector<double>> v;
+  std::vector<std::vector<double>> matrix;
 
   LaplacianMatrix() = default;
-  LaplacianMatrix(const Graph& graph, const std::vector<double>& electricalFlow);
+  LaplacianMatrix(const UndirectedGraph& undirectedGraph, const std::vector<double>& electricalFlow);
 };
 
 #endif  // _LAPLACIAN_MATRIX_H_

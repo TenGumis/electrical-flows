@@ -13,8 +13,8 @@ class UndirectedGraph
  public:
   std::vector<std::shared_ptr<UndirectedNode>> nodes;
   std::vector<std::shared_ptr<UndirectedEdge>> edges;
-  UndirectedNode* s = nullptr;
-  UndirectedNode* t = nullptr;
+  UndirectedNode* source = nullptr;
+  UndirectedNode* target = nullptr;
 
   static UndirectedGraph fromDirected(const Graph& graph);
 

@@ -31,6 +31,9 @@ set(SOURCES
     src/undirectedEdge.cpp
     src/undirectedGraph.h
     src/undirectedGraph.cpp
+    src/violation.h
+    src/violation.cpp
+    src/helpers.hpp
 )
 
 add_executable(electrical-flows ${SOURCES})

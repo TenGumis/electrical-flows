@@ -1,7 +1,9 @@
 #include "electricalFlow.h"
 
 #include <Eigen/Dense>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 
 ElectricalFlow::ElectricalFlow(const ResidualGraph& residualGraph)
         : resistances(residualGraph.getNumberOfEdges(), 0.0)
@@ -10,8 +12,9 @@ ElectricalFlow::ElectricalFlow(const ResidualGraph& residualGraph)
 
   for (int i = 0; i < residualGraph.getNumberOfEdges(); i++)
   {
-    auto forwardCapacity = residualGraph.getForwardCapacity(i);
-    auto backwardCapacity = residualGraph.getBackwardCapacity(i);
+    const auto& edge = residualGraph.graph.edges[i];
+    auto forwardCapacity = residualGraph.getForwardCapacity(edge, edge->endpoints.first);
+    auto backwardCapacity = residualGraph.getBackwardCapacity(edge, edge->endpoints.first);
     std::cerr << i << ": " << forwardCapacity << " " << backwardCapacity << std::endl;
     if (forwardCapacity != 0)
     {
@@ -31,11 +34,11 @@ ElectricalFlow::ElectricalFlow(const ResidualGraph& residualGraph)
   std::cerr << std::endl;
 }
 
-std::vector<double> ElectricalFlow::solveLinearSystemEigen(const Graph& graph,
+std::vector<double> ElectricalFlow::solveLinearSystemEigen(const UndirectedGraph& undirectedGraph,
                                                            const LaplacianMatrix& laplacianMatrix,
                                                            const Demands& demands)
 {
-  int size = laplacianMatrix.size;
+  auto size = laplacianMatrix.size;
 
   Eigen::MatrixXd m(size, size);
   m(0, 0) = 3;
@@ -46,7 +49,7 @@ std::vector<double> ElectricalFlow::solveLinearSystemEigen(const Graph& graph,
   {
     for (int col = 0; col < size; ++col)
     {
-      m(row, col) = laplacianMatrix.v[row][col];
+      m(row, col) = laplacianMatrix.matrix[row][col];
     }
   }
   std::cerr << "matrix\n" << m << std::endl;
@@ -54,9 +57,13 @@ std::vector<double> ElectricalFlow::solveLinearSystemEigen(const Graph& graph,
   Eigen::VectorXd b(size);
   for (int y = 0; y < size; ++y)
   {
-    b(y) = demands.getDemand(graph.nodes[y].get());
+    b(y) = demands.getDemand(undirectedGraph.nodes[y]);
   }
-  std::cerr << "demands\n" << b << std::endl;
+
+  std::streamsize ss = std::cerr.precision();
+  std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 1) << "demands\n"
+            << b << std::endl;
+  std::cerr << std::setprecision(ss);
 
   Eigen::VectorXd result = m.fullPivLu().solve(b);
 
@@ -67,9 +74,10 @@ std::vector<double> ElectricalFlow::solveLinearSystemEigen(const Graph& graph,
   return tmp;
 }
 
-std::vector<double> ElectricalFlow::computePotentials(const Graph& graph, const Demands& demands)
+std::vector<double> ElectricalFlow::computePotentials(const UndirectedGraph& undirectedGraph,
+                                                      const Demands& demands) const
 {
-  LaplacianMatrix laplacianMatrix(graph, resistances);
+  LaplacianMatrix laplacianMatrix(undirectedGraph, resistances);
 
   /*
   std::cerr << "Laplacian: " << std::endl;
@@ -85,5 +93,5 @@ std::vector<double> ElectricalFlow::computePotentials(const Graph& graph, const 
   */
 
   // return solveLinearSystem(laplacianMatrix, demands);
-  return solveLinearSystemEigen(graph, laplacianMatrix, demands);
+  return solveLinearSystemEigen(undirectedGraph, laplacianMatrix, demands);
 }

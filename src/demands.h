@@ -1,7 +1,7 @@
 #ifndef _DEMANDS_H_
 #define _DEMANDS_H_
 
-#include "graph.h"
+#include "undirectedGraph.h"
 
 #include <vector>
 
@@ -11,9 +11,9 @@ class Demands
   std::vector<double> demands;
 
  public:
-  Demands(const Graph& graph, double flowValue);
-  Demands(const Graph& graph, std::vector<double>& corrections);
-  double getDemand(Node* node) const;
+  Demands(const UndirectedGraph& graph, double flowValue);
+  Demands(const UndirectedGraph& graph, std::vector<double>& corrections);
+  double getDemand(const std::shared_ptr<UndirectedNode>& node) const;
 };
 
 #endif  // _DEMANDS_H_

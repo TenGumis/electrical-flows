@@ -1,22 +1,24 @@
 #ifndef _FLOW_H_
 #define _FLOW_H_
 
-#include "graph.h"
+#include "undirectedGraph.h"
 
 #include <vector>
 
 class Flow
 {
- public:
-  std::vector<double> v;
+ private:
+  std::vector<double> flow;
 
+ public:
   explicit Flow(int size);
 
-  void update(const Graph& graph,
+  double getFlow(UndirectedEdge* edge, const UndirectedNode* const endpoint) const;
+  void update(const UndirectedGraph& undirectedGraph,
               double stepSize,
               const std::vector<double>& potentials,
               const std::vector<double>& resistances);
-  void correction(const Graph& graph, const std::vector<double>& corrections);
+  void correction(const UndirectedGraph& undirectedGraph, const std::vector<double>& corrections);
   double getEnergy(const std::vector<double>& resistances);
 };
 

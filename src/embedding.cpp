@@ -1,14 +1,24 @@
 #include "embedding.h"
 
 Embedding::Embedding(int size)
-        : v(size)
+        : embedding(size)
 {
 }
 
-void Embedding::update(const Graph& graph, double stepSize, const std::vector<double>& potentials)
+double Embedding::getEmbedding(const std::shared_ptr<UndirectedNode>& node) const
 {
-  for (const auto& node : graph.nodes)
+  return embedding[node->label];
+}
+
+double Embedding::getStretch(const std::shared_ptr<UndirectedEdge>& edge) const
+{
+  return embedding[edge->endpoints.second->label] - embedding[edge->endpoints.first->label];
+}
+
+void Embedding::update(const UndirectedGraph& undirectedGraph, double stepSize, const std::vector<double>& potentials)
+{
+  for (const auto& node : undirectedGraph.nodes)
   {
-    v[node->label] += stepSize * potentials[node->label];
+    embedding[node->label] += stepSize * potentials[node->label];
   }
 }

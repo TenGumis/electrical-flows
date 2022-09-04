@@ -1,29 +1,26 @@
 #include "demands.h"
 
-Demands::Demands(const Graph& graph, double flowValue)
-        : demands(graph.nodes.size())
+Demands::Demands(const UndirectedGraph& undirectedGraph, double flowValue)
+        : demands(undirectedGraph.nodes.size())
 {
-  demands[graph.s->label] = -flowValue;
-  demands[graph.t->label] = flowValue;
+  demands[undirectedGraph.source->label] = -flowValue;
+  demands[undirectedGraph.target->label] = flowValue;
 }
 
-Demands::Demands(const Graph& graph, std::vector<double>& corrections)
-        : demands(graph.nodes.size())
+Demands::Demands(const UndirectedGraph& undirectedGraph, std::vector<double>& correctionFlow)
+        : demands(undirectedGraph.nodes.size())
 {
-  for (int i = 0; i < graph.nodes.size(); i++)
+  for (const auto& node : undirectedGraph.nodes)
   {
-    for (auto edge : graph.nodes[i]->incoming)
+    for (auto edge : node->incident)
     {
-      demands[i] += corrections[edge->id];
-    }
-    for (auto edge : graph.nodes[i]->outgoing)
-    {
-      demands[i] -= corrections[edge->id];
+      demands[node->label] +=
+              (edge->endpoints.first == node.get()) ? correctionFlow[edge->id] : -correctionFlow[edge->id];
     }
   }
 }
 
-double Demands::getDemand(Node* node) const
+double Demands::getDemand(const std::shared_ptr<UndirectedNode>& node) const
 {
   return demands[node->label];
 }

@@ -16,13 +16,13 @@ class ElectricalFlow
 
   ElectricalFlow(const ResidualGraph& residualGraph);
 
-  std::vector<double> computePotentials(const Graph& graph, const Demands& demands);
+  std::vector<double> computePotentials(const UndirectedGraph& undirectedGraph, const Demands& demands) const;
 
  private:
   std::vector<double> solveLinearSystem(const LaplacianMatrix& laplacianMatrix, const Demands& demands);
-  std::vector<double> solveLinearSystemEigen(const Graph& graph,
-                                             const LaplacianMatrix& laplacianMatrix,
-                                             const Demands& demands);
+  static std::vector<double> solveLinearSystemEigen(const UndirectedGraph& undirectedGraph,
+                                                    const LaplacianMatrix& laplacianMatrix,
+                                                    const Demands& demands);
 };
 
 #endif  // _ELECTRICAL_FLOW_H_
