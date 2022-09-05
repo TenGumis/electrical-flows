@@ -21,6 +21,7 @@ class UndirectedGraph
   void addNode(const std::shared_ptr<UndirectedNode>& newNode);
   void addEdge(const std::shared_ptr<UndirectedEdge>& newEdge);
   void addPreconditioningEdges();
+  [[nodiscard]] unsigned long getMaxCapacity() const;
 
  private:
   static void updateContractedEdge(UndirectedGraph& undirectedGraph,
@@ -29,8 +30,6 @@ class UndirectedGraph
                                    std::pair<UndirectedNode*, UndirectedNode*> newEndpoints,
                                    int capacity,
                                    int& id);
-
-  int getMaxCapacity() const;
 };
 
 #endif  // _UNDIRECTED_GRAPH_H_

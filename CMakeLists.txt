@@ -34,6 +34,7 @@ set(SOURCES
     src/violation.h
     src/violation.cpp
     src/helpers.hpp
+    src/maxFlowResult.hpp
     src/maxFlowSolver.h
     src/maxFlowSolver.cpp
     src/correctionFlow.h

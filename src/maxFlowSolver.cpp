@@ -187,13 +187,57 @@ bool isFlowValueInfeasible(const ResidualGraph& residualGraph,
   return demandedFlow > (2.0 * residualGraph.graph.nodes.size()) / (1 - primalProgress);
 }
 
-bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph)
+MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph undirectedGraph)
 {
-  // TODO
+  undirectedGraph.addPreconditioningEdges();
+  unsigned int from = 0;
+  unsigned int to = undirectedGraph.getMaxCapacity() * undirectedGraph.edges.size() + 1;
+
+  while (from < to)
+  {
+    auto flowValue = (from + to) / 2LU;
+    auto maxFlowResult = computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+    if (maxFlowResult.isFeasible)
+    {
+      from = flowValue + 1;
+    }
+    else
+    {
+      to = flowValue;
+    }
+  }
+
+  return computeMaxFlowWithPreconditioning(undirectedGraph, from - 1);
 }
 
-bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, double flowValue)
+MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph undirectedGraph, unsigned long flowValue)
 {
+  undirectedGraph.addPreconditioningEdges();
+  assert(undirectedGraph.edges.size() == 12);
+  return computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+}
+
+MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph)
+{
+  auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
+  assert(undirectedGraph.edges.size() == 6);
+  return computeMaxFlow(undirectedGraph);
+}
+
+MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, unsigned long flowValue)
+{
+  auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
+  assert(undirectedGraph.edges.size() == 6);
+  return computeMaxFlow(undirectedGraph, flowValue);
+}
+
+MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedGraph& undirectedGraph,
+                                                               unsigned long flowValue)
+{
+  if (flowValue == 0)
+  {
+    return {true, flowValue, std::vector<double>(undirectedGraph.edges.size())};
+  }
   std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2);
   int sum = 0;
   for (auto edge : undirectedGraph.edges)
@@ -231,7 +275,7 @@ bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, doubl
     if (isFlowValueInfeasible(residualGraph, demands, embedding, primalProgress))
     {
       std::cerr << "to much flow1111 " << flowValue << std::endl;
-      return false;
+      return {false};
     }
 
     if (isEarlyTerminationPossible(primalProgress, flowValue, undirectedGraph.edges.size(), etaValue))
@@ -280,7 +324,7 @@ bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, doubl
     // fixing
     {
       // gammaCouplingCheck(graph, embedding, );
-      CorrectionFlow correctionFlow(residualGraph, embedding);
+      auto correctionFlow = CorrectionFlow(residualGraph, embedding);
       printCorrections(undirectedGraph, correctionFlow);
 
       flow.applyCorrectionFlow(undirectedGraph, correctionFlow);
@@ -308,23 +352,5 @@ bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, doubl
 
     getchar();
   }
-  return true;
-}
-
-bool MaxFlowSolver::computeMaxFlow(const Graph& directedGraph)
-{
-  auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
-  assert(undirectedGraph.edges.size() == 6);
-  undirectedGraph.addPreconditioningEdges();
-  assert(undirectedGraph.edges.size() == 12);
-  // TODO
-}
-
-bool MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, double flowValue)
-{
-  auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
-  assert(undirectedGraph.edges.size() == 6);
-  undirectedGraph.addPreconditioningEdges();
-  assert(undirectedGraph.edges.size() == 12);
-  return computeMaxFlow(undirectedGraph, flowValue);
+  return {true, flowValue};
 }

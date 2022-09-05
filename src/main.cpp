@@ -43,7 +43,7 @@ int main()
   while (z--)
   {
     auto directedGraph = getInput(std::cin);
-    double temporaryFlowValue = 120;  // TODO
+    unsigned long temporaryFlowValue = 125;  // TODO
     MaxFlowSolver::computeMaxFlow(directedGraph, temporaryFlowValue);
   }
 }

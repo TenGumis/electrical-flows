@@ -124,12 +124,12 @@ void UndirectedGraph::updateContractedEdge(UndirectedGraph& undirectedGraph,
   }
 }
 
-int UndirectedGraph::getMaxCapacity() const
+unsigned long UndirectedGraph::getMaxCapacity() const
 {
-  int maxCapacity = 0;
+  unsigned long maxCapacity = 0;
   for (const auto& edge : edges)
   {
-    maxCapacity = std::max(maxCapacity, edge->capacity);
+    maxCapacity = std::max(maxCapacity, static_cast<unsigned long>(edge->capacity));
   }
   return maxCapacity;
 }
