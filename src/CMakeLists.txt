@@ -29,4 +29,6 @@ set(SOURCES
     violation.h
     violation.cpp
     helpers.hpp
+    maxFlowSolver.h
+    maxFlowSolver.cpp
 )

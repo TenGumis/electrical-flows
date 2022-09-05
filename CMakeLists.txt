@@ -34,6 +34,8 @@ set(SOURCES
     src/violation.h
     src/violation.cpp
     src/helpers.hpp
+    src/maxFlowSolver.h
+    src/maxFlowSolver.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})
