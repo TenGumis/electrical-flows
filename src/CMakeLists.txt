@@ -31,4 +31,6 @@ set(SOURCES
     helpers.hpp
     maxFlowSolver.h
     maxFlowSolver.cpp
+    correctionFlow.h
+    correctionFlow.cpp
 )

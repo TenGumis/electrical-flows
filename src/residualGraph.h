@@ -7,6 +7,8 @@
 #include <memory>
 #include <vector>
 
+class Flow;
+
 class ResidualGraph
 {
  public:
@@ -15,11 +17,12 @@ class ResidualGraph
 
   ResidualGraph(const UndirectedGraph& graph, const Flow& flow);
 
-  double getForwardCapacity(const std::shared_ptr<UndirectedEdge>& edge, const UndirectedNode* const node) const;
-  double getBackwardCapacity(const std::shared_ptr<UndirectedEdge>& edge, const UndirectedNode* const node) const;
-  double getSymmetricalResidualCapacity(const std::shared_ptr<UndirectedEdge>& edge) const;
-  int getNumberOfEdges() const;
-  const std::shared_ptr<UndirectedEdge>& getEdge(int edgeId) const;
+  [[nodiscard]] double getForwardCapacity(const std::shared_ptr<UndirectedEdge>& edge,
+                                          const UndirectedNode* node) const;
+  [[nodiscard]] double getBackwardCapacity(const std::shared_ptr<UndirectedEdge>& edge,
+                                           const UndirectedNode* node) const;
+  [[nodiscard]] double getSymmetricalResidualCapacity(const std::shared_ptr<UndirectedEdge>& edge) const;
+  [[nodiscard]] unsigned int getNumberOfEdges() const;
 };
 
 #endif  // _RESIDUAL_GRAPH_H_

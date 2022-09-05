@@ -36,6 +36,8 @@ set(SOURCES
     src/helpers.hpp
     src/maxFlowSolver.h
     src/maxFlowSolver.cpp
+    src/correctionFlow.h
+    src/correctionFlow.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})

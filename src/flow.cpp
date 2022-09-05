@@ -1,5 +1,7 @@
 #include "flow.h"
 
+#include "correctionFlow.h"
+
 Flow::Flow(int size)
         : flow(size)
 {
@@ -22,11 +24,11 @@ double Flow::getFlow(UndirectedEdge* edge, const UndirectedNode* const endpoint)
 {
   return (edge->endpoints.first == endpoint) ? flow[edge->id] : -flow[edge->id];
 }
-void Flow::correction(const UndirectedGraph& undirectedGraph, const std::vector<double>& corrections)
+void Flow::applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow)
 {
   for (const auto& edge : undirectedGraph.edges)
   {
-    flow[edge->id] += corrections[edge->id];
+    flow[edge->id] += correctionFlow.getCorrectionFlow(edge);
   }
 }
 

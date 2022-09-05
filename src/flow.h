@@ -1,9 +1,12 @@
 #ifndef _FLOW_H_
 #define _FLOW_H_
 
+#include "correctionFlow.h"
 #include "undirectedGraph.h"
 
 #include <vector>
+
+class CorrectionFlow;
 
 class Flow
 {
@@ -18,7 +21,7 @@ class Flow
               double stepSize,
               const std::vector<double>& potentials,
               const std::vector<double>& resistances);
-  void correction(const UndirectedGraph& undirectedGraph, const std::vector<double>& corrections);
+  void applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow);
   double getEnergy(const std::vector<double>& resistances);
 };
 

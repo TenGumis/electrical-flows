@@ -8,6 +8,7 @@
 #include <vector>
 
 class LaplacianMatrix;
+class Demands;
 
 class ElectricalFlow
 {

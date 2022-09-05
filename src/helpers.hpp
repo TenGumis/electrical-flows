@@ -1,5 +1,6 @@
 #include "flow.h"
 #include "embedding.h"
+#include "correctionFlow.h"
 
 #include <iomanip>
 #include <iostream>
@@ -30,15 +31,15 @@ void printEmbedding(const UndirectedGraph& undirectedGraph, const Embedding& emb
   std::cerr << std::endl;
 }
 
-void printCorrections(const std::vector<double>& corrections)
+void printCorrections(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow)
 {
   std::cerr << "corrections: " << std::endl;
   int counter = 0;
-  for (auto elem : corrections)
+  for (const auto& edge : undirectedGraph.edges)
   {
     std::cerr << counter++ << ": ";
     std::streamsize ss = std::cerr.precision();
-    std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 1) << elem << "\n";
+    std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 1) << correctionFlow.getCorrectionFlow(edge) << "\n";
     std::cerr << std::setprecision(ss);
   }
   std::cerr << std::endl;
@@ -58,3 +59,4 @@ void printInducedFlow(const UndirectedGraph& undirectedGraph, std::vector<double
     std::cerr << std::setprecision(ss);
   }
 }
+

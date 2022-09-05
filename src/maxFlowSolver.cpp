@@ -1,5 +1,6 @@
 #include "maxFlowSolver.h"
 
+#include "correctionFlow.h"
 #include "demands.h"
 #include "embedding.h"
 #include "flow.h"
@@ -114,38 +115,6 @@ bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& emb
   return true;
 }
 
-std::vector<double> getCorrections(const ResidualGraph& residualGraph, const Embedding& embedding)
-{
-  std::vector<double> corrections(residualGraph.getNumberOfEdges(), 0.0);
-
-  for (const auto& edge : residualGraph.graph.edges)
-  {
-    auto forwardCapacity = residualGraph.getForwardCapacity(edge, edge->endpoints.first);
-    auto backwardCapacity = residualGraph.getBackwardCapacity(edge, edge->endpoints.first);
-    double c = 0.0;
-    double potential = 0.0;
-
-    if (forwardCapacity != 0)
-    {
-      c += (1 / (forwardCapacity * forwardCapacity));
-      potential += 1 / forwardCapacity;
-    }
-    if (backwardCapacity != 0)
-    {
-      c += (1 / (backwardCapacity * backwardCapacity));
-      potential -= 1 / backwardCapacity;
-    }
-    double stretch = embedding.getStretch(edge);
-
-    std::cerr << forwardCapacity << " " << backwardCapacity << std::endl;
-    assert(c != 0.0);
-
-    corrections[edge->id] = (stretch - potential) / c;
-  }
-
-  return corrections;
-}
-
 void capacityConstraintCheck(const UndirectedGraph& graph, const Flow& flow)
 {
   for (const auto& edge : graph.edges)
@@ -218,7 +187,10 @@ bool isFlowValueInfeasible(const ResidualGraph& residualGraph,
   return demandedFlow > (2.0 * residualGraph.graph.nodes.size()) / (1 - primalProgress);
 }
 
-bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph) {}
+bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph)
+{
+  // TODO
+}
 
 bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, double flowValue)
 {
@@ -308,15 +280,14 @@ bool MaxFlowSolver::computeMaxFlow(const UndirectedGraph& undirectedGraph, doubl
     // fixing
     {
       // gammaCouplingCheck(graph, embedding, );
+      CorrectionFlow correctionFlow(residualGraph, embedding);
+      printCorrections(undirectedGraph, correctionFlow);
 
-      auto corrections = getCorrections(residualGraph, embedding);
-      printCorrections(corrections);
-
-      flow.correction(undirectedGraph, corrections);
+      flow.applyCorrectionFlow(undirectedGraph, correctionFlow);
       printFlow(undirectedGraph, flow);
 
       auto electricalFlow = ElectricalFlow(residualGraph);
-      auto fixingDemands = Demands(undirectedGraph, corrections);
+      auto fixingDemands = Demands(undirectedGraph, correctionFlow);
       std::cerr << "fixingDemands: " << std::endl;
       for (auto node : undirectedGraph.nodes)
       {

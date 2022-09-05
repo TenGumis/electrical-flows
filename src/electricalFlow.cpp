@@ -1,5 +1,7 @@
 #include "electricalFlow.h"
 
+#include "demands.h"
+
 #include <Eigen/Dense>
 #include <iomanip>
 #include <iostream>

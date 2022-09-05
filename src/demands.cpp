@@ -7,15 +7,15 @@ Demands::Demands(const UndirectedGraph& undirectedGraph, double flowValue)
   demands[undirectedGraph.target->label] = flowValue;
 }
 
-Demands::Demands(const UndirectedGraph& undirectedGraph, std::vector<double>& correctionFlow)
+Demands::Demands(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow)
         : demands(undirectedGraph.nodes.size())
 {
   for (const auto& node : undirectedGraph.nodes)
   {
     for (auto edge : node->incident)
     {
-      demands[node->label] +=
-              (edge->endpoints.first == node.get()) ? correctionFlow[edge->id] : -correctionFlow[edge->id];
+      demands[node->label] += (edge->endpoints.first == node.get()) ? correctionFlow.getCorrectionFlow(edge)
+                                                                    : -correctionFlow.getCorrectionFlow(edge);
     }
   }
 }
