@@ -266,7 +266,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
   // int tmp = 20000;  // flowValue/stepSize;
   int steps = 0;
-  while (!almost_equal(primalProgress, 1.0, 10) && primalProgress < 1.0)
+  while ((1 - primalProgress) * flowValue > 1)  //! almost_equal(primalProgress, 1.0, 10) && primalProgress < 1.0)
   {
     std::cerr << "STEP: " << steps++ << std::endl;
     if (steps > 40000) break;
