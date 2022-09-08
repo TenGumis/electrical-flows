@@ -18,9 +18,6 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
 {
   UndirectedGraph undirectedGraph;
 
-  std::vector<UndirectedEdge*> sourceEdges(directedGraph.nodes.size());
-  std::vector<UndirectedEdge*> targetEdges(directedGraph.nodes.size());
-
   for (const auto& node : directedGraph.nodes)
   {
     std::shared_ptr<UndirectedNode> newNode = std::make_shared<UndirectedNode>(node->label);
@@ -28,8 +25,7 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
     node->undirectedEquivalent = newNode.get();
   }
 
-  undirectedGraph.source = directedGraph.s->undirectedEquivalent;
-  undirectedGraph.target = directedGraph.t->undirectedEquivalent;
+  undirectedGraph.setSourceAndTarget(directedGraph.s->undirectedEquivalent, directedGraph.t->undirectedEquivalent);
 
   int edgeIdCounter = 0;
   for (const auto& edge : directedGraph.edges)
@@ -39,29 +35,35 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
     if (endpoints.first == undirectedGraph.source)
     {
       updateContractedEdge(undirectedGraph,
-                           sourceEdges,
+                           undirectedGraph.sourceEdges,
                            edge->to->undirectedEquivalent->label,
                            endpoints,
                            edge->capacity,
                            edgeIdCounter);
+      edge->undirectedEquivalent = undirectedGraph.sourceEdges[edge->to->undirectedEquivalent->label];
+      undirectedGraph.sourceEdges[edge->to->undirectedEquivalent->label]->directedEquivalent = edge.get();
     }
     else if (endpoints.second == undirectedGraph.target)
     {
       updateContractedEdge(undirectedGraph,
-                           targetEdges,
+                           undirectedGraph.targetEdges,
                            edge->from->undirectedEquivalent->label,
                            endpoints,
                            edge->capacity,
                            edgeIdCounter);
+      edge->undirectedEquivalent = undirectedGraph.targetEdges[edge->from->undirectedEquivalent->label];
+      undirectedGraph.targetEdges[edge->from->undirectedEquivalent->label]->directedEquivalent = edge.get();
     }
     else
     {
       auto newEdge = std::make_shared<UndirectedEdge>(endpoints, edge->capacity, edgeIdCounter++);
       undirectedGraph.addEdge(newEdge);
+      edge->undirectedEquivalent = newEdge.get();
+      newEdge->directedEquivalent = edge.get();
     }
 
     updateContractedEdge(undirectedGraph,
-                         sourceEdges,
+                         undirectedGraph.sourceEdges,
                          endpoints.second->label,
                          {undirectedGraph.source, endpoints.second},
                          edge->capacity,
@@ -69,7 +71,7 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
     if (endpoints.first != undirectedGraph.source)
     {
       updateContractedEdge(undirectedGraph,
-                           targetEdges,
+                           undirectedGraph.targetEdges,
                            endpoints.first->label,
                            {endpoints.first, undirectedGraph.target},
                            edge->capacity,
@@ -78,7 +80,7 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
     else
     {
       updateContractedEdge(undirectedGraph,
-                           sourceEdges,
+                           undirectedGraph.sourceEdges,
                            undirectedGraph.target->label,
                            {undirectedGraph.source, undirectedGraph.target},
                            edge->capacity,
@@ -86,22 +88,56 @@ UndirectedGraph UndirectedGraph::fromDirected(const Graph& directedGraph)
     }
   }
 
+  if (undirectedGraph.sourceEdges[undirectedGraph.target->label])
+  {
+    undirectedGraph.targetEdges[undirectedGraph.source->label] =
+            undirectedGraph.sourceEdges[undirectedGraph.target->label];
+  }
+
   return std::move(undirectedGraph);
 }
 
 void UndirectedGraph::addPreconditioningEdges()
 {
-  int newId = edges.size();
-  int maxCapacity = getMaxCapacity();
-  int capacity = 2 * maxCapacity;
+  unsigned int newId = edges.size();
+  unsigned int capacity = 2 * getMaxCapacity();
   std::pair<UndirectedNode*, UndirectedNode*> endpoints{source, target};
 
-  int numberOfPreconditionEdges = edges.size();
+  unsigned int numberOfPreconditionEdges = edges.size();
   for (int i = 0; i < numberOfPreconditionEdges; i++)
   {
-    auto newEdge = std::make_shared<UndirectedEdge>(endpoints, capacity, newId++);
-
+    auto newEdge = std::make_shared<UndirectedEdge>(endpoints, capacity, newId++, true);
     addEdge(newEdge);
+  }
+}
+
+void UndirectedGraph::removePreconditioningEdges()
+{
+  unsigned int numberOfPreconditionEdges = edges.size() / 2;
+
+  std::vector<UndirectedEdge*> newIncidentSource;
+  for (auto edge : source->incident)
+  {
+    if (!edge->isPreconditioned)
+    {
+      newIncidentSource.push_back(edge);
+    }
+  }
+  source->incident = newIncidentSource;
+
+  std::vector<UndirectedEdge*> newIncidentTarget;
+  for (auto edge : target->incident)
+  {
+    if (!edge->isPreconditioned)
+    {
+      newIncidentTarget.push_back(edge);
+    }
+  }
+  target->incident = newIncidentTarget;
+
+  while (numberOfPreconditionEdges--)
+  {
+    edges.pop_back();
   }
 }
 
@@ -132,4 +168,12 @@ unsigned long UndirectedGraph::getMaxCapacity() const
     maxCapacity = std::max(maxCapacity, static_cast<unsigned long>(edge->capacity));
   }
   return maxCapacity;
+}
+
+void UndirectedGraph::setSourceAndTarget(UndirectedNode* newSource, UndirectedNode* newTarget)
+{
+  source = newSource;
+  target = newTarget;
+  sourceEdges.resize(nodes.size());
+  targetEdges.resize(nodes.size());
 }

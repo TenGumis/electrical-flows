@@ -1,14 +1,14 @@
 #ifndef _MAX_FLOW_RESULT_H_
 #define _MAX_FLOW_RESULT_H_
 
-#include <vector>
+#include "flow.h"
 
 struct MaxFlowResult
 {
  public:
   bool isFeasible;
   unsigned long flowValue;
-  std::vector<double> flow;
+  Flow flow;
 };
 
 #endif  // _MAX_FLOW_RESULT_H_

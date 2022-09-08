@@ -2,8 +2,10 @@
 #define _EDGE_H_
 
 #include "node.h"
+#include "undirectedEdge.h"
 
 class Node;
+class UndirectedEdge;
 
 class Edge
 {
@@ -12,6 +14,7 @@ class Edge
   const Node* from;
   const Node* to;
   const int capacity;
+  UndirectedEdge* undirectedEquivalent;
 
   Edge(Node* from, Node* to, int capacity, int id);
 };

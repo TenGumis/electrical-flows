@@ -15,12 +15,15 @@ class UndirectedGraph
   std::vector<std::shared_ptr<UndirectedEdge>> edges;
   UndirectedNode* source = nullptr;
   UndirectedNode* target = nullptr;
+  std::vector<UndirectedEdge*> sourceEdges;
+  std::vector<UndirectedEdge*> targetEdges;
 
   static UndirectedGraph fromDirected(const Graph& graph);
 
   void addNode(const std::shared_ptr<UndirectedNode>& newNode);
   void addEdge(const std::shared_ptr<UndirectedEdge>& newEdge);
   void addPreconditioningEdges();
+  void removePreconditioningEdges();
   [[nodiscard]] unsigned long getMaxCapacity() const;
 
  private:
@@ -30,6 +33,7 @@ class UndirectedGraph
                                    std::pair<UndirectedNode*, UndirectedNode*> newEndpoints,
                                    int capacity,
                                    int& id);
+  void setSourceAndTarget(UndirectedNode* source, UndirectedNode* newTarget);
 };
 
 #endif  // _UNDIRECTED_GRAPH_H_

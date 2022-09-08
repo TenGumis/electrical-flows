@@ -8,6 +8,7 @@
 #include <vector>
 
 class Edge;
+class UndirectedNode;
 
 class Node
 {

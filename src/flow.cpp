@@ -20,10 +20,23 @@ void Flow::update(const UndirectedGraph& undirectedGraph,
   }
 }
 
-double Flow::getFlow(UndirectedEdge* edge, const UndirectedNode* const endpoint) const
+double Flow::getFlow(const UndirectedEdge* const edge, const UndirectedNode* const endpoint) const
 {
   return (edge->endpoints.first == endpoint) ? flow[edge->id] : -flow[edge->id];
 }
+
+double Flow::updateFlow(const UndirectedEdge* const edge, const UndirectedNode* const endpoint, const double value)
+{
+  if (edge->endpoints.first == endpoint)
+  {
+    flow[edge->id] += value;
+  }
+  else
+  {
+    flow[edge->id] -= value;
+  }
+}
+
 void Flow::applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow)
 {
   for (const auto& edge : undirectedGraph.edges)

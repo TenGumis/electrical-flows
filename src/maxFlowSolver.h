@@ -8,13 +8,16 @@
 class MaxFlowSolver
 {
  public:
-  static MaxFlowResult computeMaxFlow(UndirectedGraph undirectedGraph);
-  static MaxFlowResult computeMaxFlow(UndirectedGraph undirectedGraph, unsigned long flowValue);
   static MaxFlowResult computeMaxFlow(const Graph& directedGraph);
   static MaxFlowResult computeMaxFlow(const Graph& directedGraph, unsigned long flowValue);
 
  private:
+  static MaxFlowResult computeMaxFlow(UndirectedGraph& undirectedGraph);
+  static MaxFlowResult computeMaxFlow(UndirectedGraph& undirectedGraph, unsigned long flowValue);
   static MaxFlowResult computeMaxFlowWithPreconditioning(const UndirectedGraph& directedGraph, unsigned long flowValue);
+  static bool containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
+  static void removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
+  static void getDirectedFractionalFlow(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
 };
 
 #endif  // _MAX_FLOW_SOLVER_H_

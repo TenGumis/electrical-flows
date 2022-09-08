@@ -187,7 +187,7 @@ bool isFlowValueInfeasible(const ResidualGraph& residualGraph,
   return demandedFlow > (2.0 * residualGraph.graph.nodes.size()) / (1 - primalProgress);
 }
 
-MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph undirectedGraph)
+MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph& undirectedGraph)
 {
   undirectedGraph.addPreconditioningEdges();
   unsigned int from = 0;
@@ -210,11 +210,15 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph undirectedGraph)
   return computeMaxFlowWithPreconditioning(undirectedGraph, from - 1);
 }
 
-MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph undirectedGraph, unsigned long flowValue)
+MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph& undirectedGraph, unsigned long flowValue)
 {
   undirectedGraph.addPreconditioningEdges();
   assert(undirectedGraph.edges.size() == 12);
-  return computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+  auto result = computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+  undirectedGraph.removePreconditioningEdges();
+  assert(undirectedGraph.edges.size() == 6);
+  std::cerr << "LOL" << std::endl;
+  return result;
 }
 
 MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph)
@@ -228,7 +232,16 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, unsigned
 {
   auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
   assert(undirectedGraph.edges.size() == 6);
-  return computeMaxFlow(undirectedGraph, flowValue);
+  undirectedGraph.addPreconditioningEdges();
+  assert(undirectedGraph.edges.size() == 12);
+  auto result = computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+  undirectedGraph.removePreconditioningEdges();
+  assert(undirectedGraph.edges.size() == 6);
+  std::cerr << "LOL" << std::endl;
+  getDirectedFractionalFlow(directedGraph, undirectedGraph, result.flow);
+
+  // return computeMaxFlow(undirectedGraph, flowValue);
+  return result;
 }
 
 MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedGraph& undirectedGraph,
@@ -236,7 +249,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 {
   if (flowValue == 0)
   {
-    return {true, flowValue, std::vector<double>(undirectedGraph.edges.size())};
+    return {true, flowValue, Flow(0)};
   }
   std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2);
   int sum = 0;
@@ -275,7 +288,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
     if (isFlowValueInfeasible(residualGraph, demands, embedding, primalProgress))
     {
       std::cerr << "to much flow1111 " << flowValue << std::endl;
-      return {false};
+      return {false, 0, Flow(0)};
     }
 
     if (isEarlyTerminationPossible(primalProgress, flowValue, undirectedGraph.edges.size(), etaValue))
@@ -352,5 +365,58 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
     getchar();
   }
-  return {true, flowValue};
+  return {true, flowValue, flow};
+}
+
+bool MaxFlowSolver::containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
+{
+  for (const auto& edge : undirectedGraph.source->incident)
+  {
+    if (edge->directedEquivalent == nullptr && !almost_equal(flow.getFlow(edge, edge->endpoints.first), 0.0, 10))
+    {
+      return true;
+    }
+  }
+  for (const auto& edge : undirectedGraph.target->incident)
+  {
+    if (edge->directedEquivalent == nullptr && !almost_equal(flow.getFlow(edge, edge->endpoints.first), 0.0, 10))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
+{
+  // TODO
+}
+
+void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
+                                              const UndirectedGraph& undirectedGraph,
+                                              Flow& flow)
+{
+  for (const auto& edge : directedGraph.edges)
+  {
+    assert(edge->undirectedEquivalent);
+
+    auto targetEdge = undirectedGraph.targetEdges[edge->from->label];
+    flow.updateFlow(targetEdge, undirectedGraph.target, edge->capacity);
+
+    flow.updateFlow(edge->undirectedEquivalent, edge->from->undirectedEquivalent, edge->capacity);
+
+    auto sourceEdge = undirectedGraph.sourceEdges[edge->to->label];
+    flow.updateFlow(sourceEdge, edge->to->undirectedEquivalent, edge->capacity);
+  }
+
+  printFlow(undirectedGraph, flow);
+  std::cerr << "\nbefore containsFlowCycles check" << std::endl;
+  if (containsFlowCycles(directedGraph, undirectedGraph, flow))
+  {
+    std::cerr << "\nremoving Flow Cycles" << std::endl;
+    removeFlowCycles(directedGraph, undirectedGraph, flow);
+  }
+  std::cerr << "\nafter containsFlowCycles check" << std::endl;
+
+  printFlow(undirectedGraph, flow);
 }
