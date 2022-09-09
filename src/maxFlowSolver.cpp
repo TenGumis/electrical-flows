@@ -2,6 +2,8 @@
 
 #include "correctionFlow.h"
 #include "demands.h"
+#include "dynamicTreeNode.h"
+#include "dynamicTrees.h"
 #include "embedding.h"
 #include "flow.h"
 #include "graph.h"
@@ -387,9 +389,126 @@ bool MaxFlowSolver::containsFlowCycles(const Graph& directedGraph, const Undirec
   return false;
 }
 
+bool hasOutgoingFlow(const UndirectedNode* const undirectedNode,
+                     const Flow& flow,
+                     const std::vector<bool>& deletedEdges)
+{
+  for (const auto& edge : undirectedNode->incident)
+  {
+    if (deletedEdges[edge->id])
+    {
+      continue;
+    }
+    if (flow.getFlow(edge, undirectedNode) > 0.0)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+UndirectedEdge* getOutgoingFlowEdge(const UndirectedNode* const undirectedNode,
+                                    const Flow& flow,
+                                    const std::vector<bool>& deletedEdges)
+{
+  for (const auto& edge : undirectedNode->incident)
+  {
+    if (deletedEdges[edge->id])
+    {
+      continue;
+    }
+    if (flow.getFlow(edge, undirectedNode) > 0.0)
+    {
+      return edge;
+    }
+  }
+
+  return nullptr;
+}
+
 void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
 {
-  // TODO
+  DynamicTrees dynamicTrees(undirectedGraph.nodes);
+  std::vector<bool> deletedEdges(undirectedGraph.edges.size());
+
+  auto sourceTreeNode = dynamicTrees.dynamicTreesNodes[undirectedGraph.source->label].get();
+  while (true)
+  {
+    auto currentNode = dynamicTrees.getRoot(sourceTreeNode);
+    if (!hasOutgoingFlow(currentNode->undirectedNode, flow, deletedEdges))
+    {
+      // step 2 - all paths from v to t are acyclic
+      if (currentNode == sourceTreeNode)
+      {
+        for (const auto& treeNode : dynamicTrees.dynamicTreesNodes)
+        {
+          if (treeNode.get() != dynamicTrees.getRoot(treeNode.get()))
+          {
+            flow.setFlow(treeNode->undirectedEdge, treeNode->undirectedNode, dynamicTrees.getCost(treeNode.get()));
+          }
+        }
+        return;
+      }
+      for (auto edge : currentNode->undirectedNode->incident)
+      {
+        if (flow.getFlow(edge, currentNode->undirectedNode) < 0.0)
+        {
+          deletedEdges[edge->id] = true;
+          auto secondEndpoint = (edge->endpoints.first == currentNode->undirectedNode) ? edge->endpoints.second
+                                                                                       : edge->endpoints.first;
+          auto secondEndpointTree = dynamicTrees.dynamicTreesNodes[secondEndpoint->label].get();
+          if (dynamicTrees.getParent(secondEndpointTree) == currentNode)
+          {
+            flow.setFlow(secondEndpointTree->undirectedEdge, secondEndpoint, dynamicTrees.getCost(secondEndpointTree));
+            dynamicTrees.cut(secondEndpointTree);
+          }
+        }
+      }
+      // TODO usun krawedzie do currentNode
+
+      // WAZNE pomysl na usuwanie jest taki, ze zmienimy z ostatnia dobrą krawedzia na liscie
+      // pytanie czy to nie zepsuje pozniej ID krawedzi
+      // chyba nie bo zmieniamy tylko na liscie incydentnych w wierzcholkach
+    }
+    else  // step 1
+    {
+      auto edge = getOutgoingFlowEdge(currentNode->undirectedNode, flow, deletedEdges);
+      auto nextNode = dynamicTrees
+                              .dynamicTreesNodes[((edge->endpoints.first == currentNode->undirectedNode)
+                                                          ? edge->endpoints.second
+                                                          : edge->endpoints.first)
+                                                         ->label]
+                              .get();
+      if (dynamicTrees.getRoot(nextNode) == currentNode)
+      {
+        // step 3 - a cycle of positive flow has been found
+        auto minFlowNode = dynamicTrees.getMinCostNode(nextNode);
+        auto minFlowValue =
+                std::min(flow.getFlow(edge, currentNode->undirectedNode), dynamicTrees.getCost(minFlowNode));
+        flow.updateFlow(edge, currentNode->undirectedNode, -minFlowValue);
+        dynamicTrees.updatePath(nextNode, -minFlowValue);
+
+        // step 4 - delete tree edges with no remaining, flow
+        minFlowNode = dynamicTrees.getMinCostNode(nextNode);
+        while (almost_equal(dynamicTrees.getCost(minFlowNode), 0.0, 10))
+        {
+          flow.setFlow(minFlowNode->undirectedEdge, minFlowNode->undirectedNode, 0.0);
+          deletedEdges[minFlowNode->undirectedEdge->id] = true;
+          // TODO
+          // usun minFlowNode, paren(minFlowNode) z grafu
+          // mozna zrobić lazy tj. wpisac 0.0 na sztywno i wyjdzie ze jej nie ma w poszukiwaniach
+          dynamicTrees.cut(minFlowNode);
+          minFlowNode = dynamicTrees.getMinCostNode(nextNode);
+        }
+      }
+      else
+      {
+        dynamicTrees.link(currentNode, nextNode, flow.getFlow(edge, currentNode->undirectedNode));
+        currentNode->undirectedEdge = edge;  // dodac do linka equivalent edge;
+      }
+    }
+  }
 }
 
 void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,

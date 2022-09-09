@@ -39,6 +39,10 @@ set(SOURCES
     src/maxFlowSolver.cpp
     src/correctionFlow.h
     src/correctionFlow.cpp
+    src/dynamicTrees.h
+    src/dynamicTrees.cpp
+    src/dynamicTreeNode.h
+    src/dynamicTreeNode.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})

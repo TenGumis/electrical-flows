@@ -34,4 +34,8 @@ set(SOURCES
     maxFlowSolver.cpp
     correctionFlow.h
     correctionFlow.cpp
+    dynamicTrees.h
+    dynamicTrees.cpp
+    dynamicTreeNode.h
+    dynamicTreeNode.cpp
 )

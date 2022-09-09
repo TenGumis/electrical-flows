@@ -17,7 +17,8 @@ class Flow
   explicit Flow(int size);
 
   double getFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint) const;
-  double updateFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint, double value);
+  void updateFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint, double value);
+  void setFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint, double value);
   void update(const UndirectedGraph& undirectedGraph,
               double stepSize,
               const std::vector<double>& potentials,

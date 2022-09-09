@@ -25,7 +25,7 @@ double Flow::getFlow(const UndirectedEdge* const edge, const UndirectedNode* con
   return (edge->endpoints.first == endpoint) ? flow[edge->id] : -flow[edge->id];
 }
 
-double Flow::updateFlow(const UndirectedEdge* const edge, const UndirectedNode* const endpoint, const double value)
+void Flow::updateFlow(const UndirectedEdge* const edge, const UndirectedNode* const endpoint, const double value)
 {
   if (edge->endpoints.first == endpoint)
   {
@@ -34,6 +34,18 @@ double Flow::updateFlow(const UndirectedEdge* const edge, const UndirectedNode* 
   else
   {
     flow[edge->id] -= value;
+  }
+}
+
+void Flow::setFlow(const UndirectedEdge* const edge, const UndirectedNode* const endpoint, const double value)
+{
+  if (edge->endpoints.first == endpoint || value == 0.0)
+  {
+    flow[edge->id] = value;
+  }
+  else
+  {
+    flow[edge->id] = -value;
   }
 }
 
