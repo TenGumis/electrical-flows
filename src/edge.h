@@ -1,6 +1,8 @@
 #ifndef _EDGE_H_
 #define _EDGE_H_
 
+#include "matchingEdge.h"
+#include "matchingNode.h"
 #include "node.h"
 #include "undirectedEdge.h"
 
@@ -14,7 +16,9 @@ class Edge
   const Node* from;
   const Node* to;
   const int capacity;
-  UndirectedEdge* undirectedEquivalent;
+
+  UndirectedEdge* undirectedEquivalent = nullptr;
+  MatchingEdge* matchingEquivalent = nullptr;
 
   Edge(Node* from, Node* to, int capacity, int id);
 };

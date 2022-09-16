@@ -16,14 +16,18 @@ class Flow
  public:
   explicit Flow(int size);
 
+  double getFlow(const Edge* edge) const;
   double getFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint) const;
   void updateFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint, double value);
   void setFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint, double value);
+  void setFlow(const Edge* edge, double value);
+
   void update(const UndirectedGraph& undirectedGraph,
               double stepSize,
               const std::vector<double>& potentials,
               const std::vector<double>& resistances);
   void applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow);
+  void reduceBy2();
   double getEnergy(const std::vector<double>& resistances);
 };
 

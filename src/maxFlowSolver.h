@@ -18,6 +18,7 @@ class MaxFlowSolver
   static bool containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void getDirectedFractionalFlow(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
+  static void roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue);
 };
 
 #endif  // _MAX_FLOW_SOLVER_H_

@@ -24,8 +24,8 @@ Graph getInput(std::istream& inputStream)
     auto newEdge = std::make_shared<Edge>(nodeFrom, nodeTo, capacity, i);
 
     graph.addEdge(newEdge);
-    nodeFrom->outgoing.push_back(newEdge.get());
-    nodeTo->incoming.push_back(newEdge.get());
+    nodeFrom->outgoingEdges.push_back(newEdge.get());
+    nodeTo->incomingEdges.push_back(newEdge.get());
   }
 
   int s, t;

@@ -9,6 +9,9 @@
 #include "graph.h"
 #include "helpers.hpp"
 #include "laplacianMatrix.h"
+#include "matchingGraph.h"
+#include "perfectMatchingFinder.h"
+#include "randomnessProvider.h"
 #include "undirectedGraph.h"
 #include "violation.h"
 
@@ -18,6 +21,16 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+
+template <class T>
+typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp)
+{
+  // the machine epsilon has to be scaled to the magnitude of the values used
+  // and multiplied by the desired precision in ULPs (units in the last place)
+  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+         // unless the result is subnormal
+         || std::fabs(x - y) < std::numeric_limits<T>::min();
+}
 
 std::vector<double> getCongestionVector(const ResidualGraph& residualGraph,
                                         const std::vector<double>& potentials,
@@ -46,16 +59,6 @@ double getRelativeProgressStep(const double m)
   double C_eps = 200;
 
   return 1 / (33 * sqrt(C_eps * m));
-}
-
-template <class T>
-typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_equal(T x, T y, int ulp)
-{
-  // the machine epsilon has to be scaled to the magnitude of the values used
-  // and multiplied by the desired precision in ULPs (units in the last place)
-  return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
-         // unless the result is subnormal
-         || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
 
 bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& embedding, Violation& violation)
@@ -241,8 +244,8 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, unsigned
   assert(undirectedGraph.edges.size() == 6);
   std::cerr << "LOL" << std::endl;
   getDirectedFractionalFlow(directedGraph, undirectedGraph, result.flow);
+  roundFlow(directedGraph, result.flow, 3 /*flowValue*/);
 
-  // return computeMaxFlow(undirectedGraph, flowValue);
   return result;
 }
 
@@ -489,6 +492,10 @@ void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const Undirecte
         flow.updateFlow(edge, currentNode->undirectedNode, -minFlowValue);
         dynamicTrees.updatePath(nextNode, -minFlowValue);
 
+        std::cerr << dynamicTrees.getCost(dynamicTrees.dynamicTreesNodes[0].get()) << std::endl;
+        std::cerr << dynamicTrees.getCost(dynamicTrees.dynamicTreesNodes[1].get()) << std::endl;
+        std::cerr << dynamicTrees.getCost(dynamicTrees.dynamicTreesNodes[2].get()) << std::endl;
+
         // step 4 - delete tree edges with no remaining, flow
         minFlowNode = dynamicTrees.getMinCostNode(nextNode);
         while (almost_equal(dynamicTrees.getCost(minFlowNode), 0.0, 10))
@@ -538,4 +545,45 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
   std::cerr << "\nafter containsFlowCycles check" << std::endl;
 
   printFlow(undirectedGraph, flow);
+  std::cerr << "\npodziel przez 2" << std::endl;
+  flow.reduceBy2();
+  printFlow(undirectedGraph, flow);
+
+  Flow newFlow(directedGraph.edges.size());
+
+  for (const auto& edge : directedGraph.edges)
+  {
+    newFlow.setFlow(edge.get(), flow.getFlow(edge->undirectedEquivalent, edge->undirectedEquivalent->endpoints.first));
+  }
+
+  flow = newFlow;
+  printFlow(directedGraph, flow);
+}
+
+void MaxFlowSolver::roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue)
+{
+  auto matchingGraph = MatchingGraph::toMatchingGraph(directedGraph, flow, flowValue);
+  std::cerr << "fractional b-matching graph created" << std::endl;
+  printGraph(matchingGraph);
+
+  matchingGraph.toNonPerfectMatching();
+  std::cerr << "non-perfect matching graph created" << std::endl;
+  printGraph(matchingGraph);
+
+  matchingGraph.toPerfectMatching();
+  std::cerr << "perfect matching graph created" << std::endl;
+  printGraph(matchingGraph);
+
+  RandomnessProvider randomnessProvider;
+  PerfectMatchingFinder perfectMatchingFinder(randomnessProvider);
+  perfectMatchingFinder.find(matchingGraph);
+
+  for (const auto& edge : directedGraph.edges)
+  {
+    auto excess = static_cast<int>(flow.getFlow(edge.get()));
+    flow.setFlow(edge.get(), excess + static_cast<int>(edge->matchingEquivalent->matched));
+  }
+  std::cerr << "rounded:" << std::endl;
+
+  printFlow(directedGraph, flow);
 }

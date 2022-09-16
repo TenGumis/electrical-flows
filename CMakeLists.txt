@@ -43,6 +43,21 @@ set(SOURCES
     src/dynamicTrees.cpp
     src/dynamicTreeNode.h
     src/dynamicTreeNode.cpp
+    src/tmp/linkcuttree.h
+    src/tmp/linkcuttree.cpp
+    src/tmp/splaytree.h
+    src/tmp/splaytree.cpp
+    src/matchingEdge.cpp
+	src/matchingEdge.h
+	src/matchingGraph.cpp
+	src/matchingGraph.h
+	src/matchingNode.cpp
+	src/matchingNode.h
+	src/perfectMatchingFinder.cpp
+	src/perfectMatchingFinder.h
+	src/randomnessProvider.cpp
+	src/randomnessProvider.h
+
 )
 
 add_executable(electrical-flows ${SOURCES})

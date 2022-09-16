@@ -25,5 +25,6 @@ IncludeCategories:
     SortPriority:    0
     CaseSensitive:   false
 PackConstructorInitializers: Never
-#PointerAlignment: Left
+DerivePointerAlignment: false
+PointerAlignment: Left
 ...

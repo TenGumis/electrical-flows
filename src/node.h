@@ -15,8 +15,8 @@ class Node
  public:
   const int label;
 
-  std::vector<Edge*> outgoing;
-  std::vector<Edge*> incoming;
+  std::vector<Edge*> outgoingEdges;
+  std::vector<Edge*> incomingEdges;
   UndirectedNode* undirectedEquivalent;
 
   Node(int label);
