@@ -27,7 +27,7 @@ class Flow
               const std::vector<double>& potentials,
               const std::vector<double>& resistances);
   void applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow);
-  void reduceBy2();
+  void scaleDown();
   double getEnergy(const std::vector<double>& resistances);
 };
 

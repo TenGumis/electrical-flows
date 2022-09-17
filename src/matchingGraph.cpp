@@ -54,9 +54,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
 
     // z q wychodzace
     std::cerr << "z q wychodzace" << std::endl;
-    for (int j = 0; j < directedGraph.nodes[i]->outgoingEdges.size(); j++)
+    for (auto outgoingEdge : directedGraph.nodes[i]->outgoingEdges)
     {
-      auto outgoingEdge = directedGraph.nodes[i]->outgoingEdges[j];
       matchingNodeQ->demand += outgoingEdge->capacity;
       mainNewEdge->flow += flow.getFlow(outgoingEdge);
 
@@ -72,9 +71,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
 
     // do p wchodzace
     std::cerr << "do p wchodzace" << std::endl;
-    for (int j = 0; j < directedGraph.nodes[i]->incomingEdges.size(); j++)
+    for (auto incomingEdge : directedGraph.nodes[i]->incomingEdges)
     {
-      auto incomingEdge = directedGraph.nodes[i]->incomingEdges[j];
       matchingNodeP->demand += incomingEdge->capacity;
 
       auto newEdge = std::make_shared<MatchingEdge>(matchingNodeP.get(),
@@ -91,9 +89,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
   std::cerr << "t node processing" << std::endl;
   auto matchingNodePT = std::make_shared<MatchingNode>(idCounter++);
   matchingGraph.nodesP.push_back(matchingNodePT);
-  for (int j = 0; j < directedGraph.t->incomingEdges.size(); j++)
+  for (auto incomingEdge : directedGraph.t->incomingEdges)
   {
-    auto incomingEdge = directedGraph.t->incomingEdges[j];
     matchingNodePT->demand += incomingEdge->capacity;
 
     auto newEdge = std::make_shared<MatchingEdge>(matchingNodePT.get(),
@@ -109,9 +106,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
   std::cerr << "s node processing" << std::endl;
   auto matchingNodeQS = std::make_shared<MatchingNode>(idCounter++);
   matchingGraph.nodesQ.push_back(matchingNodeQS);
-  for (int j = 0; j < directedGraph.s->outgoingEdges.size(); j++)
+  for (auto outgoingEdge : directedGraph.s->outgoingEdges)
   {
-    auto outgoingEdge = directedGraph.s->outgoingEdges[j];
     matchingNodeQS->demand += outgoingEdge->capacity;
 
     auto newEdge = std::make_shared<MatchingEdge>(outgoingEdge->matchingEquivalent->pNode,
@@ -131,7 +127,7 @@ void MatchingGraph::toNonPerfectMatching()
 {
   std::cerr << "MatchingGraph::toNonPerfectMatching start" << std::endl;
   std::cerr << "edges processing" << std::endl;
-  for (auto edge : edges)
+  for (const auto& edge : edges)
   {
     auto excess = static_cast<int>(edge->flow);
 
@@ -139,75 +135,75 @@ void MatchingGraph::toNonPerfectMatching()
     edge->pNode->demand -= excess;
     edge->qNode->demand -= excess;
   }
-  std::cerr << "nodesP processing" << std::endl;
-  int idCounter = nodesP.size() + nodesQ.size();
-  auto oldNodesSize = nodesP.size();
-  for (int j = 0; j < oldNodesSize; j++)
   {
-    auto node = nodesP[j];
-    assert(node);
-    if (node->demand <= 1)
+    std::cerr << "nodesP processing" << std::endl;
+    auto idCounter = nodesP.size() + nodesQ.size();
+    auto oldNodesSize = nodesP.size();
+    for (int j = 0; j < oldNodesSize; j++)
     {
-      continue;
-    }
-    std::cerr << "node: " << node->id << " " << node->demand << std::endl;
-
-    auto excess = static_cast<int>(node->demand - 1);
-    node->demand = 1;
-    std::vector<MatchingNode*> newNodes;
-    newNodes.push_back(node.get());
-    for (int i = 0; i < excess; i++)
-    {
-      std::cerr << "new node: " << 1 << "/" << excess << std::endl;
-
-      auto newNode = std::make_shared<MatchingNode>(idCounter++, 1);
-      nodesP.push_back(newNode);
-      newNodes.push_back(newNode.get());
-      std::cerr << "xxx " << std::endl;
-    }
-
-    std::vector<MatchingEdge*> edgesToRedistribute;
-    for (auto edge : node->edges)
-    {
-      edgesToRedistribute.push_back(edge);
-    }
-    node->edges.clear();
-
-    int counter = 0;
-    double flow = 0;
-    for (int i = 0; i < edgesToRedistribute.size(); i++)
-    {
-      auto edge = edgesToRedistribute[i];
-      if (edge->flow + flow <= 1)
+      auto node = nodesP[j];
+      assert(node);
+      if (node->demand <= 1)
       {
-        flow += edge->flow;
-        edge->pNode = newNodes[counter];
-        newNodes[counter]->edges.push_back(edge);
+        continue;
       }
-      else
+      std::cerr << "node: " << node->id << " " << node->demand << std::endl;
+
+      auto excess = static_cast<int>(node->demand - 1);
+      node->demand = 1;
+      std::vector<MatchingNode*> newNodes;
+      newNodes.push_back(node.get());
+      for (int i = 0; i < excess; i++)
       {
-        double edgeFlow = edge->flow;
+        std::cerr << "new node: " << 1 << "/" << excess << std::endl;
 
-        edge->pNode = newNodes[counter];
-        edge->flow = 1.0 - flow;
-        newNodes[counter]->edges.push_back(edge);
+        auto newNode = std::make_shared<MatchingNode>(idCounter++, 1);
+        nodesP.push_back(newNode);
+        newNodes.push_back(newNode.get());
+        std::cerr << "xxx " << std::endl;
+      }
 
-        flow = flow + edgeFlow - 1;
-        counter++;
+      std::vector<MatchingEdge*> edgesToRedistribute;
+      for (auto edge : node->edges)
+      {
+        edgesToRedistribute.push_back(edge);
+      }
+      node->edges.clear();
 
-        auto newEdge = std::make_shared<MatchingEdge>(newNodes[counter], edge->qNode, flow);
+      int counter = 0;
+      double flow = 0;
+      for (auto edge : edgesToRedistribute)
+      {
+        if (edge->flow + flow <= 1)
+        {
+          flow += edge->flow;
+          edge->pNode = newNodes[counter];
+          newNodes[counter]->edges.push_back(edge);
+        }
+        else
+        {
+          double edgeFlow = edge->flow;
 
-        edges.push_back(newEdge);
-        newNodes[counter]->edges.push_back(newEdge.get());
-        edge->qNode->edges.push_back(newEdge.get());
+          edge->pNode = newNodes[counter];
+          edge->flow = 1.0 - flow;
+          newNodes[counter]->edges.push_back(edge);
+
+          flow = flow + edgeFlow - 1;
+          counter++;
+
+          auto newEdge = std::make_shared<MatchingEdge>(newNodes[counter], edge->qNode, flow);
+
+          edges.push_back(newEdge);
+          newNodes[counter]->edges.push_back(newEdge.get());
+          edge->qNode->edges.push_back(newEdge.get());
+        }
       }
     }
   }
 
   std::cerr << "nodesP processing" << std::endl;
-  // TODO
   {
-    int idCounter = nodesP.size() + nodesQ.size();
+    auto idCounter = nodesP.size() + nodesQ.size();
     auto oldNodesSize = nodesQ.size();
     for (int j = 0; j < oldNodesSize; j++)
     {
@@ -242,9 +238,8 @@ void MatchingGraph::toNonPerfectMatching()
 
       int counter = 0;
       double flow = 0;
-      for (int i = 0; i < edgesToRedistribute.size(); i++)
+      for (auto edge : edgesToRedistribute)
       {
-        auto edge = edgesToRedistribute[i];
         if (edge->flow + flow <= 1)
         {
           flow += edge->flow;
@@ -286,12 +281,12 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
 void MatchingGraph::toPerfectMatching()
 {
   double totalMatching = 0;
-  for (auto edge : edges)
+  for (const auto& edge : edges)
   {
     totalMatching += edge->flow;
   }
-  double dp = nodesP.size() - totalMatching;
-  double dq = nodesQ.size() - totalMatching;
+  double dp = static_cast<double>(nodesP.size()) - totalMatching;
+  double dq = static_cast<double>(nodesQ.size()) - totalMatching;
 
   std::cerr << "dp: " << dp << " dq: " << dq << " total: " << totalMatching << std::endl;
   unsigned int nodeIdCounter = nodesP.size() + nodesQ.size();
@@ -314,7 +309,7 @@ void MatchingGraph::toPerfectMatching()
 
       auto newNode = std::make_shared<MatchingNode>(nodeIdCounter++, 1);
       nodesP.push_back(newNode);
-      newNodes.push_back({1.0, newNode.get()});
+      newNodes.emplace_back(1.0, newNode.get());
       std::cerr << "xxx " << std::endl;
     }
 
@@ -371,7 +366,7 @@ void MatchingGraph::toPerfectMatching()
 
       auto newNode = std::make_shared<MatchingNode>(nodeIdCounter++, 1);
       nodesQ.push_back(newNode);
-      newNodes.push_back({1.0, newNode.get()});
+      newNodes.emplace_back(1.0, newNode.get());
       std::cerr << "xxx " << std::endl;
     }
 

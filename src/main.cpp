@@ -44,6 +44,23 @@ int main()
   {
     auto directedGraph = getInput(std::cin);
     unsigned long temporaryFlowValue = 125;  // TODO
-    MaxFlowSolver::computeMaxFlow(directedGraph, temporaryFlowValue);
+    auto result = MaxFlowSolver::computeMaxFlow(directedGraph, temporaryFlowValue);
+    if (result.isFeasible)
+    {
+      double totalFlow = 0.0;
+      for (const auto edge : directedGraph.s->outgoingEdges)
+      {
+        totalFlow += result.flow.getFlow(edge);
+      }
+      std::cout << "total flow: " << totalFlow << std::endl;
+      for (const auto& edge : directedGraph.edges)
+      {
+        std::cout << edge->id << ": " << result.flow.getFlow(edge.get()) << std::endl;
+      }
+    }
+    else
+    {
+      std::cout << "not feasible flow\n";
+    }
   }
 }

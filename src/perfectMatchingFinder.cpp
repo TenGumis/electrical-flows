@@ -1,7 +1,5 @@
 #include "perfectMatchingFinder.h"
 
-#include <algorithm>
-#include <cassert>
 #include <iostream>
 #include <random>
 #include <unordered_map>
@@ -13,8 +11,8 @@ PerfectMatchingFinder::PerfectMatchingFinder(RandomnessProvider& randomnessProvi
 
 void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
 {
-  int numberNodesP = matchingGraph.nodesP.size();
-  int numberOfSteps = 0;
+  auto numberNodesP = matchingGraph.nodesP.size();
+  auto numberOfSteps = 0u;
   MatchingPairs matches;
   MatchingPairsEdges matchedEdges;
   SuperNodePairs superNodes;  // mean that key,value pair is a supernode in
@@ -22,7 +20,7 @@ void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
   auto randomNodesP = getRandomNodesQueue(matchingGraph.nodesP);
   while (matches.size() < numberNodesP)
   {
-    int randomWalkSteps = 2 * (2 + (numberNodesP / (numberNodesP - numberOfSteps)));
+    auto randomWalkSteps = 2 * (2 + (numberNodesP / (numberNodesP - numberOfSteps)));
 
     auto randomStartNode = randomNodesP.front();
     randomNodesP.pop();
@@ -31,6 +29,7 @@ void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
     while (!truncatedWalk(randomStartNode, randomWalkSteps - 1, superNodes, path))
     {
       path.clear();
+      std::cout << "FAIL" << std::endl;
     }
     updateMatches(path, matches, matchedEdges, superNodes);
     numberOfSteps++;
@@ -39,9 +38,9 @@ void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
   {
     std::cerr << match.first->id << " " << match.second->id << std::endl;
   }
-  for (const auto& matchedEdges : matchedEdges)
+  for (const auto& matchedEdge : matchedEdges)
   {
-    matchedEdges.second->matched = true;
+    matchedEdge.second->matched = true;
   }
 }
 
@@ -64,7 +63,7 @@ MatchingEdge* PerfectMatchingFinder::sampleOutEdge(MatchingNode* currentNode)
 }
 
 bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode,
-                                          int stepsLimit,
+                                          unsigned int stepsLimit,
                                           SuperNodePairs& superNodes,
                                           std::list<MatchingEdge*>& path)
 {

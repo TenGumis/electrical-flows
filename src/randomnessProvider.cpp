@@ -1,7 +1,5 @@
 #include "randomnessProvider.h"
 
-#include <algorithm>
-
 RandomnessProvider::RandomnessProvider()
 {
   std::random_device rd;
@@ -10,15 +8,15 @@ RandomnessProvider::RandomnessProvider()
 
 int RandomnessProvider::getRandomNumber(unsigned int limit)
 {
-  std::uniform_int_distribution<> uniformDistribution(0, limit - 1);
+  std::uniform_int_distribution<> uniformDistribution(0, static_cast<int>(limit - 1));
 
   return uniformDistribution(randomNumberGenerator);
 }
 
-std::vector<int> RandomnessProvider::getRandomPermutation(unsigned int size)
+std::vector<unsigned int> RandomnessProvider::getRandomPermutation(unsigned int size)
 {
-  std::vector<int> indexes(size);
-  for (int i = 0; i < indexes.size(); i++)
+  std::vector<unsigned int> indexes(size);
+  for (auto i = 0U; i < indexes.size(); i++)
   {
     indexes[i] = i;
   }

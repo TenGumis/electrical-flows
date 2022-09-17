@@ -7,7 +7,6 @@ struct MaxFlowResult
 {
  public:
   bool isFeasible;
-  unsigned long flowValue;
   Flow flow;
 };
 

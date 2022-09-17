@@ -14,7 +14,7 @@ class MatchingNode
 {
  public:
   int id;
-  int demand = 0;
+  unsigned int demand = 0;
   std::vector<MatchingEdge*> edges;
 
   MatchingNode(int id, int demand = 0);

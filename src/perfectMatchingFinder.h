@@ -12,7 +12,7 @@
 class PerfectMatchingFinder
 {
  public:
-  PerfectMatchingFinder(RandomnessProvider& randomnessProvider);
+  explicit PerfectMatchingFinder(RandomnessProvider& randomnessProvider);
 
   void find(MatchingGraph& matchingGraph);
 
@@ -27,14 +27,14 @@ class PerfectMatchingFinder
   MatchingEdge* sampleOutEdge(MatchingNode* currentNode);
 
   bool truncatedWalk(MatchingNode* matchingNode,
-                     int stepsLimit,
+                     unsigned int stepsLimit,
                      SuperNodePairs& superNodes,
                      std::list<MatchingEdge*>& path);
 
-  void updateMatches(const std::list<MatchingEdge*>& path,
-                     MatchingPairs& matches,
-                     MatchingPairsEdges& matchedEdges,
-                     SuperNodePairs& superNodes);
+  static void updateMatches(const std::list<MatchingEdge*>& path,
+                            MatchingPairs& matches,
+                            MatchingPairsEdges& matchedEdges,
+                            SuperNodePairs& superNodes);
 };
 
 #endif  // _PERFECT_MATCHING_FINDER_H_

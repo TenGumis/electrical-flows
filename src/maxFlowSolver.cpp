@@ -254,7 +254,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 {
   if (flowValue == 0)
   {
-    return {true, flowValue, Flow(0)};
+    return {true, Flow(0)};
   }
   std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 2);
   int sum = 0;
@@ -293,7 +293,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
     if (isFlowValueInfeasible(residualGraph, demands, embedding, primalProgress))
     {
       std::cerr << "to much flow1111 " << flowValue << std::endl;
-      return {false, 0, Flow(0)};
+      return {false, Flow(0)};
     }
 
     if (isEarlyTerminationPossible(primalProgress, flowValue, undirectedGraph.edges.size(), etaValue))
@@ -370,7 +370,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
     getchar();
   }
-  return {true, flowValue, flow};
+  return {true, flow};
 }
 
 bool MaxFlowSolver::containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
@@ -546,7 +546,7 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
 
   printFlow(undirectedGraph, flow);
   std::cerr << "\npodziel przez 2" << std::endl;
-  flow.reduceBy2();
+  flow.scaleDown();
   printFlow(undirectedGraph, flow);
 
   Flow newFlow(directedGraph.edges.size());

@@ -9,7 +9,7 @@ class RandomnessProvider
   RandomnessProvider();
 
   int getRandomNumber(unsigned int limit);
-  std::vector<int> getRandomPermutation(unsigned int size);
+  std::vector<unsigned int> getRandomPermutation(unsigned int size);
 
  private:
   std::mt19937 randomNumberGenerator;

@@ -83,9 +83,9 @@ void printInducedFlow(const UndirectedGraph& undirectedGraph, std::vector<double
 
 void printGraph(const MatchingGraph& matchingGraph)
 {
-  std::cout << "nodesP: " << matchingGraph.nodesP.size() << std::endl;
+  std::cerr << "nodesP: " << matchingGraph.nodesP.size() << std::endl;
   double totalFlow = 0;
-  for (auto node : matchingGraph.nodesP)
+  for (const auto& node : matchingGraph.nodesP)
   {
     double flow = 0;
     for (auto edge : node->edges)
@@ -94,13 +94,13 @@ void printGraph(const MatchingGraph& matchingGraph)
       totalFlow += edge->flow;
       assert(edge->pNode->id == node->id);
     }
-    std::cout << node->id << " " << flow << "/" << node->demand << " " << node->edges.size() << std::endl;
+    std::cerr << node->id << " " << flow << "/" << node->demand << " " << node->edges.size() << std::endl;
   }
-  std::cout << "totalFlow: " << totalFlow << std::endl;
+  std::cerr << "totalFlow: " << totalFlow << std::endl;
 
-  std::cout << "nodesQ: " << matchingGraph.nodesQ.size() << std::endl;
+  std::cerr << "nodesQ: " << matchingGraph.nodesQ.size() << std::endl;
   totalFlow = 0;
-  for (auto node : matchingGraph.nodesQ)
+  for (const auto& node : matchingGraph.nodesQ)
   {
     double flow = 0;
     for (auto edge : node->edges)
@@ -109,14 +109,14 @@ void printGraph(const MatchingGraph& matchingGraph)
       totalFlow += edge->flow;
       assert(edge->qNode->id == node->id);
     }
-    std::cout << node->id << " " << flow << "/" << node->demand << " " << node->edges.size() << std::endl;
+    std::cerr << node->id << " " << flow << "/" << node->demand << " " << node->edges.size() << std::endl;
   }
-  std::cout << "totalFlow: " << totalFlow << std::endl;
+  std::cerr << "totalFlow: " << totalFlow << std::endl;
 
-  std::cout << "edges: " << matchingGraph.edges.size() << std::endl;
-  for (auto edge : matchingGraph.edges)
+  std::cerr << "edges: " << matchingGraph.edges.size() << std::endl;
+  for (const auto& edge : matchingGraph.edges)
   {
-    std::cout << edge->pNode->id << " " << edge->qNode->id << " " << edge->flow << std::endl;
+    std::cerr << edge->pNode->id << " " << edge->qNode->id << " " << edge->flow << std::endl;
   }
 }
 

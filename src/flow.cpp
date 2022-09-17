@@ -67,11 +67,12 @@ void Flow::applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const Cor
   }
 }
 
-void Flow::reduceBy2()
+void Flow::scaleDown()
 {
+  const double SCALING_FACTOR = 2.0;
   for (auto& elem : flow)
   {
-    elem /= 2;
+    elem /= SCALING_FACTOR;
   }
 }
 

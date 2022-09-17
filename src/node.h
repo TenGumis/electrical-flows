@@ -17,7 +17,7 @@ class Node
 
   std::vector<Edge*> outgoingEdges;
   std::vector<Edge*> incomingEdges;
-  UndirectedNode* undirectedEquivalent;
+  UndirectedNode* undirectedEquivalent = nullptr;
 
   Node(int label);
 };

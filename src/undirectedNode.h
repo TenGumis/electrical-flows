@@ -11,16 +11,11 @@ class UndirectedEdge;
 
 class UndirectedNode
 {
- private:
-  unsigned int deletedEdgesNumber;
-
  public:
   const int label;
   std::vector<UndirectedEdge*> incident;
 
   UndirectedNode(int label);
-  unsigned int getDeletedEdgesNumber() const;
-  void deleteEdge(int idx);
 };
 
 #endif  // _UNDIRECTED_NODE_H_

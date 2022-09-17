@@ -14,7 +14,7 @@ class Demands
  public:
   Demands(const UndirectedGraph& graph, double flowValue);
   Demands(const UndirectedGraph& graph, const CorrectionFlow& correctionFlow);
-  double getDemand(const std::shared_ptr<UndirectedNode>& node) const;
+  [[nodiscard]] double getDemand(const std::shared_ptr<UndirectedNode>& node) const;
 };
 
 #endif  // _DEMANDS_H_

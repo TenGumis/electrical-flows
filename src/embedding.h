@@ -13,8 +13,8 @@ class Embedding
  public:
   explicit Embedding(int size);
 
-  double getEmbedding(const std::shared_ptr<UndirectedNode>& node) const;
-  double getStretch(const std::shared_ptr<UndirectedEdge>& edge) const;
+  [[nodiscard]] double getEmbedding(const std::shared_ptr<UndirectedNode>& node) const;
+  [[nodiscard]] double getStretch(const std::shared_ptr<UndirectedEdge>& edge) const;
   void update(const UndirectedGraph& undirectedGraph, double stepSize, const std::vector<double>& potentials);
 };
 

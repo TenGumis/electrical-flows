@@ -57,7 +57,6 @@ set(SOURCES
 	src/perfectMatchingFinder.h
 	src/randomnessProvider.cpp
 	src/randomnessProvider.h
-
 )
 
 add_executable(electrical-flows ${SOURCES})
