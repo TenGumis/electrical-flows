@@ -10,16 +10,6 @@ class DynamicTreeNode
 {
   friend class DynamicTrees;
 
- private:
-  DynamicTreeNode* splayParent;
-  std::pair<DynamicTreeNode*, DynamicTreeNode*> splayChildrens;
-
-  double cost;
-  double deltaCost;
-  DynamicTreeNode* minCostNode;
-
-  DynamicTreeNode* pathParent;
-
  public:
   UndirectedNode* undirectedNode;
   UndirectedEdge* undirectedEdge;

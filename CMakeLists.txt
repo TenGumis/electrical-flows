@@ -43,10 +43,10 @@ set(SOURCES
     src/dynamicTrees.cpp
     src/dynamicTreeNode.h
     src/dynamicTreeNode.cpp
-    src/tmp/linkcuttree.h
-    src/tmp/linkcuttree.cpp
-    src/tmp/splaytree.h
-    src/tmp/splaytree.cpp
+	src/community-code/linkcuttree.h
+	src/community-code/linkcuttree.cpp
+	src/community-code/splaytree.h
+	src/community-code/splaytree.cpp
     src/matchingEdge.cpp
 	src/matchingEdge.h
 	src/matchingGraph.cpp

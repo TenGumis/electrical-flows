@@ -1,8 +1,10 @@
 #ifndef _DYNAMIC_TREES_H_
 #define _DYNAMIC_TREES_H_
 
-#include "tmp/linkcuttree.h"
+#include "community-code/linkcuttree.h"
 #include "undirectedNode.h"
+
+#include <limits>
 
 class DynamicTreeNode;
 class UndirectedNode;
@@ -10,6 +12,9 @@ class LinkCutTree;
 
 class DynamicTrees
 {
+ private:
+  constexpr static const double INF = std::numeric_limits<double>::infinity();
+
  public:
   std::vector<std::shared_ptr<DynamicTreeNode>> dynamicTreesNodes;
   LinkCutTree linkCutTree;
@@ -23,15 +28,6 @@ class DynamicTrees
   DynamicTreeNode* getMinCostNode(DynamicTreeNode* node);
   DynamicTreeNode* getRoot(DynamicTreeNode* node);
   DynamicTreeNode* getParent(DynamicTreeNode* node);
-
- private:
-  void detachRightChildFromPath(DynamicTreeNode* node);
-  void access(DynamicTreeNode* node);
-
-  void splay(DynamicTreeNode* node);
-  void rotate(DynamicTreeNode* node);
-  void attach(DynamicTreeNode* parent, DynamicTreeNode* child, bool side);
-  bool isRightChild(DynamicTreeNode* node) const;
 };
 
 #endif  // _DYNAMIC_TREES_H_

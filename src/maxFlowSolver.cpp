@@ -90,12 +90,12 @@ bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& emb
     violation.getViolation(edge) << std::endl; std::cerr << violation.getViolation(edge) / std::min(forwardCapacity,
     backwardCapacity) << std::endl; std::cerr << std::setprecision(ss);
 
-    auto tmp = std::fabs(stretch - potential);
+    auto community-code = std::fabs(stretch - potential);
     if(almost_equal(stretch, potential, 100))
     {
-        tmp = 0.0;
+        community-code = 0.0;
     }
-    if (tmp > violation.getViolation(edge) / std::min(forwardCapacity, backwardCapacity))
+    if (community-code > violation.getViolation(edge) / std::min(forwardCapacity, backwardCapacity))
     {
       assert(false);
       return false;
@@ -282,7 +282,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
   Violation violation(undirectedGraph.edges.size());
   ResidualGraph residualGraph(undirectedGraph, flow);
 
-  // int tmp = 20000;  // flowValue/stepSize;
+  // int community-code = 20000;  // flowValue/stepSize;
   int steps = 0;
   while ((1 - primalProgress) * flowValue > 1)  //! almost_equal(primalProgress, 1.0, 10) && primalProgress < 1.0)
   {
