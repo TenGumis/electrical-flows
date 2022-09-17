@@ -189,7 +189,7 @@ bool isFlowValueInfeasible(const ResidualGraph& residualGraph,
     demandedFlow += demands.getDemand(node) * embedding.getEmbedding(node);
   }
 
-  return demandedFlow > (2.0 * residualGraph.graph.nodes.size()) / (1 - primalProgress);
+  return demandedFlow > (2.0 * residualGraph.graph.edges.size()) / (1 - primalProgress);
 }
 
 MaxFlowResult MaxFlowSolver::computeMaxFlow(UndirectedGraph& undirectedGraph)
@@ -240,6 +240,10 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, unsigned
   undirectedGraph.addPreconditioningEdges();
   assert(undirectedGraph.edges.size() == 12);
   auto result = computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
+  if (!result.isFeasible)
+  {
+    return result;
+  }
   undirectedGraph.removePreconditioningEdges();
   assert(undirectedGraph.edges.size() == 6);
   std::cerr << "LOL" << std::endl;

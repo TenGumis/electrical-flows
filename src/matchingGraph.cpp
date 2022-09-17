@@ -190,7 +190,10 @@ void MatchingGraph::toNonPerfectMatching()
 
           flow = flow + edgeFlow - 1;
           counter++;
-
+          if (counter >= newNodes.size())
+          {
+            break;
+          }
           auto newEdge = std::make_shared<MatchingEdge>(newNodes[counter], edge->qNode, flow);
 
           edges.push_back(newEdge);
@@ -256,6 +259,10 @@ void MatchingGraph::toNonPerfectMatching()
 
           flow = flow + edgeFlow - 1;
           counter++;
+          if (counter >= newNodes.size())
+          {
+            break;
+          }
 
           auto newEdge = std::make_shared<MatchingEdge>(edge->pNode, newNodes[counter], flow);
 
@@ -332,6 +339,10 @@ void MatchingGraph::toPerfectMatching()
         newNodes[currentNewNode].second->edges.push_back(newEdge.get());
 
         currentNewNode++;
+        if (currentNewNode >= newNodes.size())
+        {
+          break;
+        }
       }
       newNodes[currentNewNode].first -= currentNodePair.first;
 
@@ -389,6 +400,10 @@ void MatchingGraph::toPerfectMatching()
         newNodes[currentNewNode].second->edges.push_back(newEdge.get());
 
         currentNewNode++;
+        if (currentNewNode >= newNodes.size())
+        {
+          break;
+        }
       }
       newNodes[currentNewNode].first -= currentNodePair.first;
 
