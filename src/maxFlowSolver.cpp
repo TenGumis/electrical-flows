@@ -8,6 +8,7 @@
 #include "flow.h"
 #include "graph.h"
 #include "helpers.hpp"
+#include "integralFlow.h"
 #include "laplacianMatrix.h"
 #include "matchingGraph.h"
 #include "perfectMatchingFinder.h"
@@ -236,20 +237,23 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph)
 MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph, unsigned long flowValue)
 {
   auto undirectedGraph = UndirectedGraph::fromDirected(directedGraph);
-  assert(undirectedGraph.edges.size() == 6);
+  // assert(undirectedGraph.edges.size() == 6);
   undirectedGraph.addPreconditioningEdges();
-  assert(undirectedGraph.edges.size() == 12);
+  // assert(undirectedGraph.edges.size() == 12);
   auto result = computeMaxFlowWithPreconditioning(undirectedGraph, flowValue);
   if (!result.isFeasible)
   {
     return result;
   }
   undirectedGraph.removePreconditioningEdges();
-  assert(undirectedGraph.edges.size() == 6);
+  // assert(undirectedGraph.edges.size() == 6);
   std::cerr << "LOL" << std::endl;
   getDirectedFractionalFlow(directedGraph, undirectedGraph, result.flow);
-  roundFlow(directedGraph, result.flow, 3 /*flowValue*/);
+  auto integralFlow = roundFlow(directedGraph, result.flow, getFlowValue(directedGraph, result.flow));
+  applyAugumentingPaths(directedGraph, integralFlow);
 
+  printFlow(directedGraph, integralFlow);
+  result.integralFlow = integralFlow;
   return result;
 }
 
@@ -269,9 +273,9 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
     std::cerr << edge->capacity << std::endl;
   }
   std::cerr << sum << std::endl;
-  assert(sum == 141);
+  // assert(sum == 141);
 
-  const double etaValue = getEtaValue(0, 0);  // TODO set proper values
+  const double etaValue = getEtaValue(undirectedGraph.getMaxCapacity(), undirectedGraph.edges.size());
   Demands demands(undirectedGraph, flowValue);
   std::cerr << "demands: " << std::endl;
   for (auto node : undirectedGraph.nodes)
@@ -302,6 +306,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
     if (isEarlyTerminationPossible(primalProgress, flowValue, undirectedGraph.edges.size(), etaValue))
     {
+      std::cout << "isEarlyTerminationPossible" << std::endl;
       /*
       That is, once we know that we are within an additive factor of m 2 −η of the target ﬂow, we do not
       execute progress steps anymore. Observe that in that case we can just round our current ﬂow and
@@ -312,48 +317,52 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
       // round()
       // performAugmentingPathsComputation() m^(1/2 - etaValue) razy
+      // break;
     }
     // augumenting
     {
-      std::cerr << "-------------------------------------------------------" << std::endl;
+      // std::cerr << "-------------------------------------------------------" << std::endl;
 
       primalProgress = getPrimalProgress(undirectedGraph, flow, flowValue);
       // dualProgress = sigma * y;
-      std::cerr << "primalProgress: " << primalProgress << std::endl;
-      std::cerr << "dualProgress: " << dualProgress << std::endl;
-      std::cerr << "steps: " << steps << std::endl;
+      // std::cerr << "primalProgress: " << primalProgress << std::endl;
+      // std::cerr << "dualProgress: " << dualProgress << std::endl;
+      // std::cerr << "steps: " << steps << std::endl;
 
       auto electricalFlow = ElectricalFlow(residualGraph);
       auto potentials = electricalFlow.computePotentials(undirectedGraph, demands);
-      printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
-      std::cerr << "stepSize: " << geAbsoluteStepSize(primalProgress, undirectedGraph.edges.size()) << std::endl;
-      std::cerr << "potentials: " << std::endl;
-      for (auto elem : potentials)
-      {
-        std::cerr << elem << " ";
-      }
-      std::cerr << std::endl;
+      // printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
+      /*
+       std::cerr << "stepSize: " << geAbsoluteStepSize(primalProgress, undirectedGraph.edges.size()) << std::endl;
+       std::cerr << "potentials: " << std::endl;
+       for (auto elem : potentials)
+       {
+         std::cerr << elem << " ";
+       }
+       std::cerr << std::endl;
+       */
 
       double stepSize = geAbsoluteStepSize(primalProgress, undirectedGraph.edges.size());
       flow.update(undirectedGraph, stepSize, potentials, electricalFlow.resistances);
       embedding.update(undirectedGraph, stepSize, potentials);
-      printFlow(undirectedGraph, flow);
-      printEmbedding(undirectedGraph, embedding);
+      // printFlow(undirectedGraph, flow);
+      // printEmbedding(undirectedGraph, embedding);
 
-      std::cerr << "primalProgress: " << getPrimalProgress(undirectedGraph, flow, flowValue) << std::endl;
+      // std::cerr << "primalProgress: " << getPrimalProgress(undirectedGraph, flow, flowValue) << std::endl;
     }
 
     // fixing
     {
       // gammaCouplingCheck(graph, embedding, );
       auto correctionFlow = CorrectionFlow(residualGraph, embedding);
-      printCorrections(undirectedGraph, correctionFlow);
+      // printCorrections(undirectedGraph, correctionFlow);
 
       flow.applyCorrectionFlow(undirectedGraph, correctionFlow);
-      printFlow(undirectedGraph, flow);
+      // printFlow(undirectedGraph, flow);
 
       auto electricalFlow = ElectricalFlow(residualGraph);
       auto fixingDemands = Demands(undirectedGraph, correctionFlow);
+      /*
       std::cerr << "fixingDemands: " << std::endl;
       for (auto node : undirectedGraph.nodes)
       {
@@ -362,17 +371,16 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
                   << " ";
         std::cerr << std::setprecision(ss);
       }
+       */
       auto potentials = electricalFlow.computePotentials(undirectedGraph, fixingDemands);
-      printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
+      // printInducedFlow(undirectedGraph, potentials, electricalFlow.resistances);
 
       flow.update(undirectedGraph, 1.0, potentials, electricalFlow.resistances);
       embedding.update(undirectedGraph, 1.0, potentials);
 
-      printFlow(undirectedGraph, flow);
+      // printFlow(undirectedGraph, flow);
     }
     feasibilityCheck(undirectedGraph, flow, demands);
-
-    getchar();
   }
   return {true, flow};
 }
@@ -465,7 +473,8 @@ void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const Undirecte
           auto secondEndpoint = (edge->endpoints.first == currentNode->undirectedNode) ? edge->endpoints.second
                                                                                        : edge->endpoints.first;
           auto secondEndpointTree = dynamicTrees.dynamicTreesNodes[secondEndpoint->label].get();
-          if (dynamicTrees.getParent(secondEndpointTree) == currentNode)
+          if (dynamicTrees.getRoot(secondEndpointTree) != secondEndpointTree &&
+              dynamicTrees.getParent(secondEndpointTree) == currentNode)
           {
             flow.setFlow(secondEndpointTree->undirectedEdge, secondEndpoint, dynamicTrees.getCost(secondEndpointTree));
             dynamicTrees.cut(secondEndpointTree);
@@ -522,6 +531,63 @@ void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const Undirecte
   }
 }
 
+unsigned long MaxFlowSolver::getFlowValue(const Graph& directedGraph, const Flow& flow)
+{
+  double flowValue = 0.0;
+  for (auto edge : directedGraph.s->outgoingEdges)
+  {
+    flowValue += flow.getFlow(edge);
+  }
+  for (auto edge : directedGraph.s->incomingEdges)
+  {
+    flowValue -= flow.getFlow(edge);
+  }
+  std::cout << "getFlowValue: " << static_cast<unsigned long>(flowValue) << std::endl;
+  return static_cast<unsigned long>(flowValue);
+}
+
+void MaxFlowSolver::applyAugumentingPaths(const Graph& directedGraph, IntegralFlow& flow)
+{
+  while (findAugumentingPath(directedGraph, flow))
+    ;
+}
+
+bool MaxFlowSolver::findAugumentingPath(const Graph& directedGraph, IntegralFlow& flow)
+{
+  std::queue<const Node*> nodesQueue;
+  std::vector<Edge*> incomingEdge(directedGraph.nodes.size());
+  nodesQueue.push(directedGraph.s);
+  while (!nodesQueue.empty())
+  {
+    auto currentNode = nodesQueue.front();
+    nodesQueue.pop();
+    for (auto edge : currentNode->outgoingEdges)
+    {
+      if (incomingEdge[edge->to->label] == nullptr && edge->to != directedGraph.s &&
+          edge->capacity > static_cast<int>(flow.getFlow(edge)))
+      {
+        incomingEdge[edge->to->label] = edge;
+        nodesQueue.push(edge->to);
+      }
+    }
+  }
+
+  if (incomingEdge[directedGraph.t->label])
+  {
+    auto additionalFlow = std::numeric_limits<unsigned long>::max();
+    for (auto edge = incomingEdge[directedGraph.t->label]; edge != nullptr; edge = incomingEdge[edge->from->label])
+    {
+      additionalFlow = min(additionalFlow, edge->capacity - static_cast<unsigned long>(flow.getFlow(edge)));
+    }
+    for (auto edge = incomingEdge[directedGraph.t->label]; edge != nullptr; edge = incomingEdge[edge->from->label])
+    {
+      flow.updateFlow(edge, additionalFlow);
+    }
+    return true;
+  }
+  return false;
+}
+
 void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
                                               const UndirectedGraph& undirectedGraph,
                                               Flow& flow)
@@ -564,7 +630,7 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
   printFlow(directedGraph, flow);
 }
 
-void MaxFlowSolver::roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue)
+IntegralFlow MaxFlowSolver::roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue)
 {
   auto matchingGraph = MatchingGraph::toMatchingGraph(directedGraph, flow, flowValue);
   std::cerr << "fractional b-matching graph created" << std::endl;
@@ -582,12 +648,14 @@ void MaxFlowSolver::roundFlow(const Graph& directedGraph, Flow& flow, unsigned l
   PerfectMatchingFinder perfectMatchingFinder(randomnessProvider);
   perfectMatchingFinder.find(matchingGraph);
 
+  IntegralFlow integralFlow(directedGraph.edges.size());
   for (const auto& edge : directedGraph.edges)
   {
     auto excess = static_cast<int>(flow.getFlow(edge.get()));
-    flow.setFlow(edge.get(), excess + static_cast<int>(edge->matchingEquivalent->matched));
+    integralFlow.setFlow(edge.get(), excess + static_cast<int>(edge->matchingEquivalent->matched));
   }
   std::cerr << "rounded:" << std::endl;
 
-  printFlow(directedGraph, flow);
+  printFlow(directedGraph, integralFlow);
+  return integralFlow;
 }

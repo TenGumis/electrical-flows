@@ -6,9 +6,9 @@ RandomnessProvider::RandomnessProvider()
   randomNumberGenerator = std::mt19937(rd());
 }
 
-int RandomnessProvider::getRandomNumber(unsigned int limit)
+double RandomnessProvider::getRandomNumber()
 {
-  std::uniform_int_distribution<> uniformDistribution(0, static_cast<int>(limit - 1));
+  std::uniform_real_distribution<double> uniformDistribution(0.0, 1.0);
 
   return uniformDistribution(randomNumberGenerator);
 }

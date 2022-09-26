@@ -2,6 +2,7 @@
 #define _MAX_FLOW_SOLVER_H_
 
 #include "graph.h"
+#include "integralFlow.h"
 #include "maxFlowResult.hpp"
 #include "undirectedGraph.h"
 
@@ -18,7 +19,10 @@ class MaxFlowSolver
   static bool containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void getDirectedFractionalFlow(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
-  static void roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue);
+  static unsigned long getFlowValue(const Graph& directedGraph, const Flow& flow);
+  static void applyAugumentingPaths(const Graph& directedGraph, IntegralFlow& flow);
+  static bool findAugumentingPath(const Graph& directedGraph, IntegralFlow& flow);
+  static IntegralFlow roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue);
 };
 
 #endif  // _MAX_FLOW_SOLVER_H_

@@ -8,7 +8,7 @@ class RandomnessProvider
  public:
   RandomnessProvider();
 
-  int getRandomNumber(unsigned int limit);
+  double getRandomNumber();
   std::vector<unsigned int> getRandomPermutation(unsigned int size);
 
  private:

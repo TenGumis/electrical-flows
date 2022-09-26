@@ -43,19 +43,19 @@ int main()
   while (z--)
   {
     auto directedGraph = getInput(std::cin);
-    unsigned long temporaryFlowValue = 128;  // TODO
+    unsigned long temporaryFlowValue = 127;  // TODO
     auto result = MaxFlowSolver::computeMaxFlow(directedGraph, temporaryFlowValue);
     if (result.isFeasible)
     {
-      double totalFlow = 0.0;
+      unsigned long totalFlow = 0.0;
       for (const auto edge : directedGraph.s->outgoingEdges)
       {
-        totalFlow += result.flow.getFlow(edge);
+        totalFlow += result.integralFlow.getFlow(edge);
       }
       std::cout << "total flow: " << totalFlow << std::endl;
       for (const auto& edge : directedGraph.edges)
       {
-        std::cout << edge->id << ": " << result.flow.getFlow(edge.get()) << std::endl;
+        std::cout << edge->id << ": " << result.integralFlow.getFlow(edge.get()) << std::endl;
       }
     }
     else

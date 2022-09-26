@@ -9,8 +9,35 @@ PerfectMatchingFinder::PerfectMatchingFinder(RandomnessProvider& randomnessProvi
 {
 }
 
+void PerfectMatchingFinder::initializeProbabilityPrefixSum(MatchingGraph& matchingGraph)
+{
+  for (auto& node : matchingGraph.nodesP)
+  {
+    node->probabilityPrefixSum.resize(node->edges.size());
+    double prefixSum = 0.0;
+    for (unsigned int i = 0U; i < node->edges.size(); i++)
+    {
+      prefixSum += node->edges[i]->flow;
+      node->probabilityPrefixSum[i] = prefixSum;
+    }
+    node->probabilityPrefixSum.back() = std::numeric_limits<double>::infinity();
+  }
+  for (auto& node : matchingGraph.nodesQ)
+  {
+    node->probabilityPrefixSum.resize(node->edges.size());
+    double prefixSum = 0.0;
+    for (unsigned int i = 0U; i < node->edges.size(); i++)
+    {
+      prefixSum += node->edges[i]->flow;
+      node->probabilityPrefixSum[i] = prefixSum;
+    }
+    node->probabilityPrefixSum.back() = std::numeric_limits<double>::infinity();
+  }
+}
+
 void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
 {
+  initializeProbabilityPrefixSum(matchingGraph);
   auto numberNodesP = matchingGraph.nodesP.size();
   auto numberOfSteps = 0u;
   MatchingPairs matches;
@@ -58,7 +85,11 @@ std::queue<MatchingNode*> PerfectMatchingFinder::getRandomNodesQueue(
 
 MatchingEdge* PerfectMatchingFinder::sampleOutEdge(MatchingNode* currentNode)
 {
-  auto edge = currentNode->edges[randomnessProvider.getRandomNumber(currentNode->edges.size())];
+  auto randomNumber = randomnessProvider.getRandomNumber();
+  auto prefixSumPosition = std::lower_bound(
+          currentNode->probabilityPrefixSum.begin(), currentNode->probabilityPrefixSum.end(), randomNumber);
+  auto edgeIdx = std::distance(currentNode->probabilityPrefixSum.begin(), prefixSumPosition);
+  auto edge = currentNode->edges[edgeIdx];
   return edge;  //(currentNode != edge->pNode) ? edge->pNode : edge->qNode;
 }
 

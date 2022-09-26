@@ -5,6 +5,7 @@
 #include "embedding.h"
 #include "correctionFlow.h"
 #include "matchingGraph.h"
+#include "integralFlow.h"
 
 #include <iomanip>
 #include <iostream>
@@ -30,6 +31,21 @@ void printFlow(const UndirectedGraph& undirectedGraph, const Flow& flow)
 void printFlow(const Graph& graph, const Flow& flow)
 {
     std::cerr << "flow: " << std::endl;
+    int counter = 0;
+    for (const auto& edge : graph.edges)
+    {
+        std::cerr << counter++ << ": ";
+        auto value = flow.getFlow(edge.get());
+        std::streamsize ss = std::cerr.precision();
+        std::cerr << std::fixed << std::setprecision(std::numeric_limits<double>::digits10 + 1) << value << "\n";
+        std::cerr << std::setprecision(ss);
+    }
+    std::cerr << std::endl;
+}
+
+void printFlow(const Graph& graph, const IntegralFlow& flow)
+{
+    std::cerr << "integral flow: " << std::endl;
     int counter = 0;
     for (const auto& edge : graph.edges)
     {

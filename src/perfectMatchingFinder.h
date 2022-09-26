@@ -22,15 +22,14 @@ class PerfectMatchingFinder
   using SuperNodePairs = std::unordered_map<MatchingNode*, MatchingNode*>;
   RandomnessProvider& randomnessProvider;
 
+  static void initializeProbabilityPrefixSum(MatchingGraph& matchingGraph);
+
   std::queue<MatchingNode*> getRandomNodesQueue(const std::vector<std::shared_ptr<MatchingNode>>& nodes);
-
   MatchingEdge* sampleOutEdge(MatchingNode* currentNode);
-
   bool truncatedWalk(MatchingNode* matchingNode,
                      unsigned int stepsLimit,
                      SuperNodePairs& superNodes,
                      std::list<MatchingEdge*>& path);
-
   static void updateMatches(const std::list<MatchingEdge*>& path,
                             MatchingPairs& matches,
                             MatchingPairsEdges& matchedEdges,

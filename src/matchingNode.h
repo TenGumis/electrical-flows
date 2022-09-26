@@ -16,6 +16,7 @@ class MatchingNode
   int id;
   unsigned int demand = 0;
   std::vector<MatchingEdge*> edges;
+  std::vector<double> probabilityPrefixSum;
 
   MatchingNode(int id, int demand = 0);
   double getDeficit() const;
