@@ -11,7 +11,7 @@ class Embedding
   std::vector<double> embedding;
 
  public:
-  explicit Embedding(int size);
+  explicit Embedding(unsigned int size);
 
   [[nodiscard]] double getEmbedding(const std::shared_ptr<UndirectedNode>& node) const;
   [[nodiscard]] double getStretch(const std::shared_ptr<UndirectedEdge>& edge) const;

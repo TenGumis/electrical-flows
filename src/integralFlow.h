@@ -12,7 +12,7 @@ class IntegralFlow
   std::vector<unsigned long> flow;
 
  public:
-  explicit IntegralFlow(int size);
+  explicit IntegralFlow(unsigned int size);
 
   unsigned long getFlow(const Edge* edge) const;
   void setFlow(const Edge* edge, unsigned long value);

@@ -2,7 +2,7 @@
 
 #include "correctionFlow.h"
 
-IntegralFlow::IntegralFlow(int size)
+IntegralFlow::IntegralFlow(unsigned int size)
         : flow(size)
 {
 }

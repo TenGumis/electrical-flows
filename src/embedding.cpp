@@ -1,6 +1,6 @@
 #include "embedding.h"
 
-Embedding::Embedding(int size)
+Embedding::Embedding(unsigned int size)
         : embedding(size)
 {
 }

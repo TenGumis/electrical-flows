@@ -31,8 +31,6 @@ set(SOURCES
     src/undirectedEdge.cpp
     src/undirectedGraph.h
     src/undirectedGraph.cpp
-    src/violation.h
-    src/violation.cpp
     src/helpers.hpp
     src/maxFlowResult.hpp
     src/maxFlowSolver.h

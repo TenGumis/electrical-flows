@@ -2,7 +2,7 @@
 
 #include "correctionFlow.h"
 
-Flow::Flow(int size)
+Flow::Flow(unsigned int size)
         : flow(size)
 {
 }
@@ -74,15 +74,4 @@ void Flow::scaleDown()
   {
     elem /= SCALING_FACTOR;
   }
-}
-
-double Flow::getEnergy(const std::vector<double>& resistances)
-{
-  double energy = 0.0;
-  for (int i = 0; i < flow.size(); i++)
-  {
-    energy += resistances[i] * flow[i] * flow[i];
-  }
-
-  return energy;
 }

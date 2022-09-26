@@ -14,7 +14,7 @@ class Flow
   std::vector<double> flow;
 
  public:
-  explicit Flow(int size);
+  explicit Flow(unsigned int size);
 
   double getFlow(const Edge* edge) const;
   double getFlow(const UndirectedEdge* edge, const UndirectedNode* endpoint) const;
@@ -28,7 +28,6 @@ class Flow
               const std::vector<double>& resistances);
   void applyCorrectionFlow(const UndirectedGraph& undirectedGraph, const CorrectionFlow& correctionFlow);
   void scaleDown();
-  double getEnergy(const std::vector<double>& resistances);
 };
 
 #endif  // _FLOW_H_
