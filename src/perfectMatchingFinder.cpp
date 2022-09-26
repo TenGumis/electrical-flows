@@ -1,6 +1,5 @@
 #include "perfectMatchingFinder.h"
 
-#include <iostream>
 #include <random>
 #include <unordered_map>
 
@@ -56,14 +55,9 @@ void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
     while (!truncatedWalk(randomStartNode, randomWalkSteps - 1, superNodes, path))
     {
       path.clear();
-      std::cout << "FAIL" << std::endl;
     }
     updateMatches(path, matches, matchedEdges, superNodes);
     numberOfSteps++;
-  }
-  for (const auto& match : matches)
-  {
-    std::cerr << match.first->id << " " << match.second->id << std::endl;
   }
   for (const auto& matchedEdge : matchedEdges)
   {

@@ -59,6 +59,10 @@ set(SOURCES
     src/integralFlow.cpp
     src/fractionalSolutionRounder.h
     src/fractionalSolutionRounder.cpp
+    src/augmentingPathFinder.h
+    src/augmentingPathFinder.cpp
+    src/flowCycleDetector.h
+    src/flowCycleDetector.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})

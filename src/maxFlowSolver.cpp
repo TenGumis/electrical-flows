@@ -1,23 +1,18 @@
 #include "maxFlowSolver.h"
 
+#include "augmentingPathFinder.h"
 #include "correctionFlow.h"
 #include "demands.h"
-#include "dynamicTreeNode.h"
-#include "dynamicTrees.h"
 #include "embedding.h"
 #include "flow.h"
+#include "flowCycleDetector.h"
 #include "fractionalSolutionRounder.h"
 #include "graph.h"
-#include "helpers.hpp"
-#include "integralFlow.h"
 #include "laplacianMatrix.h"
 #include "undirectedGraph.h"
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
-#include <limits>
-#include <queue>
 #include <vector>
 
 template <class T>
@@ -141,9 +136,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlow(const Graph& directedGraph)
   getDirectedFractionalFlow(directedGraph, undirectedGraph, result.flow);
   auto integralFlow =
           FractionalSolutionRounder::roundFlow(directedGraph, result.flow, getFlowValue(directedGraph, result.flow));
-  applyAugmentingPaths(directedGraph, integralFlow);
-
-  printFlow(directedGraph, integralFlow);
+  AugmentingPathFinder::applyAugmentingPaths(directedGraph, integralFlow);
   result.integralFlow = integralFlow;
   return result;
 }
@@ -205,128 +198,6 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
   return {true, flow};
 }
 
-bool MaxFlowSolver::containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
-{
-  return std::any_of(undirectedGraph.source->incident.begin(),
-                     undirectedGraph.source->incident.end(),
-                     [flow](const auto& edge) {
-                       return edge->directedEquivalent == nullptr &&
-                              !almost_equal(flow.getFlow(edge, edge->endpoints.first), 0.0, 10);
-                     }) ||
-         std::any_of(undirectedGraph.target->incident.begin(),
-                     undirectedGraph.target->incident.end(),
-                     [&](const auto& edge) {
-                       return edge->directedEquivalent == nullptr &&
-                              !almost_equal(flow.getFlow(edge, edge->endpoints.first), 0.0, 10);
-                     });
-}
-
-bool hasOutgoingFlow(const UndirectedNode* const undirectedNode,
-                     const Flow& flow,
-                     const std::vector<bool>& deletedEdges)
-{
-  return std::any_of(undirectedNode->incident.begin(),
-                     undirectedNode->incident.end(),
-                     [&](const auto& edge)
-                     { return !deletedEdges[edge->id] && flow.getFlow(edge, undirectedNode) > 0.0; });
-}
-
-UndirectedEdge* getOutgoingFlowEdge(const UndirectedNode* const undirectedNode,
-                                    const Flow& flow,
-                                    const std::vector<bool>& deletedEdges)
-{
-  for (const auto& edge : undirectedNode->incident)
-  {
-    if (deletedEdges[edge->id])
-    {
-      continue;
-    }
-    if (flow.getFlow(edge, undirectedNode) > 0.0)
-    {
-      return edge;
-    }
-  }
-
-  return nullptr;
-}
-
-void MaxFlowSolver::removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
-{
-  DynamicTrees dynamicTrees(undirectedGraph.nodes);
-  std::vector<bool> deletedEdges(undirectedGraph.edges.size());
-
-  auto sourceTreeNode = dynamicTrees.dynamicTreesNodes[undirectedGraph.source->label].get();
-  while (true)
-  {
-    auto currentNode = dynamicTrees.getRoot(sourceTreeNode);
-    if (!hasOutgoingFlow(currentNode->undirectedNode, flow, deletedEdges))
-    {
-      // step 2 - all paths from v to t are acyclic
-      if (currentNode == sourceTreeNode)
-      {
-        for (const auto& treeNode : dynamicTrees.dynamicTreesNodes)
-        {
-          if (treeNode.get() != dynamicTrees.getRoot(treeNode.get()))
-          {
-            flow.setFlow(treeNode->undirectedEdge, treeNode->undirectedNode, dynamicTrees.getCost(treeNode.get()));
-          }
-        }
-        return;
-      }
-      for (auto edge : currentNode->undirectedNode->incident)
-      {
-        if (flow.getFlow(edge, currentNode->undirectedNode) < 0.0)
-        {
-          deletedEdges[edge->id] = true;
-          auto secondEndpoint = (edge->endpoints.first == currentNode->undirectedNode) ? edge->endpoints.second
-                                                                                       : edge->endpoints.first;
-          auto secondEndpointTree = dynamicTrees.dynamicTreesNodes[secondEndpoint->label].get();
-          if (dynamicTrees.getRoot(secondEndpointTree) != secondEndpointTree &&
-              dynamicTrees.getParent(secondEndpointTree) == currentNode)
-          {
-            flow.setFlow(secondEndpointTree->undirectedEdge, secondEndpoint, dynamicTrees.getCost(secondEndpointTree));
-            dynamicTrees.cut(secondEndpointTree);
-          }
-        }
-      }
-    }
-    else  // step 1
-    {
-      auto edge = getOutgoingFlowEdge(currentNode->undirectedNode, flow, deletedEdges);
-      auto nextNode = dynamicTrees
-                              .dynamicTreesNodes[((edge->endpoints.first == currentNode->undirectedNode)
-                                                          ? edge->endpoints.second
-                                                          : edge->endpoints.first)
-                                                         ->label]
-                              .get();
-      if (dynamicTrees.getRoot(nextNode) == currentNode)
-      {
-        // step 3 - a cycle of positive flow has been found
-        auto minFlowNode = dynamicTrees.getMinCostNode(nextNode);
-        auto minFlowValue =
-                std::min(flow.getFlow(edge, currentNode->undirectedNode), dynamicTrees.getCost(minFlowNode));
-        flow.updateFlow(edge, currentNode->undirectedNode, -minFlowValue);
-        dynamicTrees.updatePath(nextNode, -minFlowValue);
-
-        // step 4 - delete tree edges with no remaining, flow
-        minFlowNode = dynamicTrees.getMinCostNode(nextNode);
-        while (almost_equal(dynamicTrees.getCost(minFlowNode), 0.0, 10))
-        {
-          flow.setFlow(minFlowNode->undirectedEdge, minFlowNode->undirectedNode, 0.0);
-          deletedEdges[minFlowNode->undirectedEdge->id] = true;
-          dynamicTrees.cut(minFlowNode);
-          minFlowNode = dynamicTrees.getMinCostNode(nextNode);
-        }
-      }
-      else
-      {
-        dynamicTrees.link(currentNode, nextNode, flow.getFlow(edge, currentNode->undirectedNode));
-        currentNode->undirectedEdge = edge;
-      }
-    }
-  }
-}
-
 unsigned long MaxFlowSolver::getFlowValue(const Graph& directedGraph, const Flow& flow)
 {
   double flowValue = 0.0;
@@ -338,50 +209,7 @@ unsigned long MaxFlowSolver::getFlowValue(const Graph& directedGraph, const Flow
   {
     flowValue -= flow.getFlow(edge);
   }
-  std::cout << "getFlowValue: " << static_cast<unsigned long>(flowValue) << std::endl;
   return static_cast<unsigned long>(flowValue);
-}
-
-void MaxFlowSolver::applyAugmentingPaths(const Graph& directedGraph, IntegralFlow& flow)
-{
-  while (findAugmentingPath(directedGraph, flow))
-    ;
-}
-
-bool MaxFlowSolver::findAugmentingPath(const Graph& directedGraph, IntegralFlow& flow)
-{
-  std::queue<const Node*> nodesQueue;
-  std::vector<Edge*> incomingEdge(directedGraph.nodes.size());
-  nodesQueue.push(directedGraph.s);
-  while (!nodesQueue.empty())
-  {
-    auto currentNode = nodesQueue.front();
-    nodesQueue.pop();
-    for (auto edge : currentNode->outgoingEdges)
-    {
-      if (incomingEdge[edge->to->label] == nullptr && edge->to != directedGraph.s &&
-          edge->capacity > static_cast<int>(flow.getFlow(edge)))
-      {
-        incomingEdge[edge->to->label] = edge;
-        nodesQueue.push(edge->to);
-      }
-    }
-  }
-
-  if (incomingEdge[directedGraph.t->label])
-  {
-    auto additionalFlow = std::numeric_limits<unsigned long>::max();
-    for (auto edge = incomingEdge[directedGraph.t->label]; edge != nullptr; edge = incomingEdge[edge->from->label])
-    {
-      additionalFlow = min(additionalFlow, edge->capacity - static_cast<unsigned long>(flow.getFlow(edge)));
-    }
-    for (auto edge = incomingEdge[directedGraph.t->label]; edge != nullptr; edge = incomingEdge[edge->from->label])
-    {
-      flow.updateFlow(edge, additionalFlow);
-    }
-    return true;
-  }
-  return false;
 }
 
 void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
@@ -401,9 +229,9 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
     flow.updateFlow(sourceEdge, edge->to->undirectedEquivalent, edge->capacity);
   }
 
-  if (containsFlowCycles(directedGraph, undirectedGraph, flow))
+  if (FlowCycleDetector::containsFlowCycles(directedGraph, undirectedGraph, flow))
   {
-    removeFlowCycles(directedGraph, undirectedGraph, flow);
+    FlowCycleDetector::removeFlowCycles(directedGraph, undirectedGraph, flow);
   }
   flow.scaleDown();
 

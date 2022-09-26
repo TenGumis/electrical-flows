@@ -5,7 +5,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <queue>
 #include <utility>
 
@@ -13,8 +12,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
 {
   MatchingGraph matchingGraph;
   int idCounter = 0;
-  std::cerr << "MatchingGraph::toMatchingGraph start" << std::endl;
-  std::cerr << "edges processing" << std::endl;
   for (const auto& edge : directedGraph.edges)
   {
     auto matchingNodeP = std::make_shared<MatchingNode>(idCounter++, edge->capacity);
@@ -30,11 +27,8 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
     matchingNodeP->edges.push_back(newEdge.get());
     matchingNodeQ->edges.push_back(newEdge.get());
   }
-  std::cerr << "nodes processing" << std::endl;
   for (int i = 0; i < directedGraph.nodes.size(); i++)
   {
-    std::cerr << i << "/" << directedGraph.nodes.size() << " nodeId: " << directedGraph.nodes[i]->label << std::endl;
-
     if (directedGraph.nodes[i].get() == directedGraph.s || directedGraph.nodes[i].get() == directedGraph.t)
     {
       continue;
@@ -51,9 +45,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
     matchingGraph.edges.push_back(mainNewEdge);
     matchingNodeP->edges.push_back(mainNewEdge.get());
     matchingNodeQ->edges.push_back(mainNewEdge.get());
-
-    // z q wychodzace
-    std::cerr << "z q wychodzace" << std::endl;
     for (auto outgoingEdge : directedGraph.nodes[i]->outgoingEdges)
     {
       matchingNodeQ->demand += outgoingEdge->capacity;
@@ -68,9 +59,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
       assert(outgoingEdge->matchingEquivalent->pNode);
       outgoingEdge->matchingEquivalent->pNode->edges.push_back(newEdge.get());
     }
-
-    // do p wchodzace
-    std::cerr << "do p wchodzace" << std::endl;
     for (auto incomingEdge : directedGraph.nodes[i]->incomingEdges)
     {
       matchingNodeP->demand += incomingEdge->capacity;
@@ -86,7 +74,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
     }
   }
 
-  std::cerr << "t node processing" << std::endl;
   auto matchingNodePT = std::make_shared<MatchingNode>(idCounter++);
   matchingGraph.nodesP.push_back(matchingNodePT);
   for (auto incomingEdge : directedGraph.t->incomingEdges)
@@ -103,7 +90,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
   }
   matchingNodePT->demand -= flowValue;
 
-  std::cerr << "s node processing" << std::endl;
   auto matchingNodeQS = std::make_shared<MatchingNode>(idCounter++);
   matchingGraph.nodesQ.push_back(matchingNodeQS);
   for (auto outgoingEdge : directedGraph.s->outgoingEdges)
@@ -125,8 +111,6 @@ MatchingGraph MatchingGraph::toMatchingGraph(const Graph& directedGraph, Flow& f
 
 void MatchingGraph::toNonPerfectMatching()
 {
-  std::cerr << "MatchingGraph::toNonPerfectMatching start" << std::endl;
-  std::cerr << "edges processing" << std::endl;
   for (const auto& edge : edges)
   {
     auto excess = static_cast<int>(edge->flow);
@@ -136,7 +120,6 @@ void MatchingGraph::toNonPerfectMatching()
     edge->qNode->demand -= excess;
   }
   {
-    std::cerr << "nodesP processing" << std::endl;
     auto idCounter = nodesP.size() + nodesQ.size();
     auto oldNodesSize = nodesP.size();
     for (int j = 0; j < oldNodesSize; j++)
@@ -147,7 +130,6 @@ void MatchingGraph::toNonPerfectMatching()
       {
         continue;
       }
-      std::cerr << "node: " << node->id << " " << node->demand << std::endl;
 
       auto excess = static_cast<int>(node->demand - 1);
       node->demand = 1;
@@ -155,12 +137,9 @@ void MatchingGraph::toNonPerfectMatching()
       newNodes.push_back(node.get());
       for (int i = 0; i < excess; i++)
       {
-        std::cerr << "new node: " << 1 << "/" << excess << std::endl;
-
         auto newNode = std::make_shared<MatchingNode>(idCounter++, 1);
         nodesP.push_back(newNode);
         newNodes.push_back(newNode.get());
-        std::cerr << "xxx " << std::endl;
       }
 
       std::vector<MatchingEdge*> edgesToRedistribute;
@@ -203,8 +182,6 @@ void MatchingGraph::toNonPerfectMatching()
       }
     }
   }
-
-  std::cerr << "nodesP processing" << std::endl;
   {
     auto idCounter = nodesP.size() + nodesQ.size();
     auto oldNodesSize = nodesQ.size();
@@ -216,7 +193,6 @@ void MatchingGraph::toNonPerfectMatching()
       {
         continue;
       }
-      std::cerr << "node: " << node->id << " " << node->demand << std::endl;
 
       auto excess = static_cast<int>(node->demand - 1);
       node->demand = 1;
@@ -224,12 +200,9 @@ void MatchingGraph::toNonPerfectMatching()
       newNodes.push_back(node.get());
       for (int i = 0; i < excess; i++)
       {
-        std::cerr << "new node: " << 1 << "/" << excess << std::endl;
-
         auto newNode = std::make_shared<MatchingNode>(idCounter++, 1);
         nodesQ.push_back(newNode);
         newNodes.push_back(newNode.get());
-        std::cerr << "xxx " << std::endl;
       }
 
       std::vector<MatchingEdge*> edgesToRedistribute;
@@ -295,7 +268,6 @@ void MatchingGraph::toPerfectMatching()
   double dp = static_cast<double>(nodesP.size()) - totalMatching;
   double dq = static_cast<double>(nodesQ.size()) - totalMatching;
 
-  std::cerr << "dp: " << dp << " dq: " << dq << " total: " << totalMatching << std::endl;
   unsigned int nodeIdCounter = nodesP.size() + nodesQ.size();
   {
     auto newNodesNumberP = static_cast<unsigned int>(dq + 1.0);
@@ -312,12 +284,9 @@ void MatchingGraph::toPerfectMatching()
     std::vector<std::pair<double, MatchingNode*>> newNodes;
     for (auto i = 0u; i < newNodesNumberP; i++)
     {
-      std::cerr << "new node: " << 1 << "/" << newNodesNumberP << std::endl;
-
       auto newNode = std::make_shared<MatchingNode>(nodeIdCounter++, 1);
       nodesP.push_back(newNode);
       newNodes.emplace_back(1.0, newNode.get());
-      std::cerr << "xxx " << std::endl;
     }
 
     auto currentNewNode = 0u;
@@ -373,12 +342,9 @@ void MatchingGraph::toPerfectMatching()
     std::vector<std::pair<double, MatchingNode*>> newNodes;
     for (auto i = 0u; i < newNodesNumberQ; i++)
     {
-      std::cerr << "new node: " << 1 << "/" << newNodesNumberQ << std::endl;
-
       auto newNode = std::make_shared<MatchingNode>(nodeIdCounter++, 1);
       nodesQ.push_back(newNode);
       newNodes.emplace_back(1.0, newNode.get());
-      std::cerr << "xxx " << std::endl;
     }
 
     auto currentNewNode = 0u;
