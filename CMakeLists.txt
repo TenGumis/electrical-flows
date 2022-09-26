@@ -59,6 +59,8 @@ set(SOURCES
 	src/randomnessProvider.h
     src/integralFlow.h
     src/integralFlow.cpp
+    src/fractionalSolutionRounder.h
+    src/fractionalSolutionRounder.cpp
 )
 
 add_executable(electrical-flows ${SOURCES})

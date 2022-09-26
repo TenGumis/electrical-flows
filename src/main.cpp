@@ -43,8 +43,7 @@ int main()
   while (z--)
   {
     auto directedGraph = getInput(std::cin);
-    unsigned long temporaryFlowValue = 127;  // TODO
-    auto result = MaxFlowSolver::computeMaxFlow(directedGraph, temporaryFlowValue);
+    auto result = MaxFlowSolver::computeMaxFlow(directedGraph);
     if (result.isFeasible)
     {
       unsigned long totalFlow = 0.0;

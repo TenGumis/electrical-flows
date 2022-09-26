@@ -10,19 +10,15 @@ class MaxFlowSolver
 {
  public:
   static MaxFlowResult computeMaxFlow(const Graph& directedGraph);
-  static MaxFlowResult computeMaxFlow(const Graph& directedGraph, unsigned long flowValue);
 
  private:
-  static MaxFlowResult computeMaxFlow(UndirectedGraph& undirectedGraph);
-  static MaxFlowResult computeMaxFlow(UndirectedGraph& undirectedGraph, unsigned long flowValue);
   static MaxFlowResult computeMaxFlowWithPreconditioning(const UndirectedGraph& directedGraph, unsigned long flowValue);
   static bool containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static void getDirectedFractionalFlow(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
   static unsigned long getFlowValue(const Graph& directedGraph, const Flow& flow);
-  static void applyAugumentingPaths(const Graph& directedGraph, IntegralFlow& flow);
-  static bool findAugumentingPath(const Graph& directedGraph, IntegralFlow& flow);
-  static IntegralFlow roundFlow(const Graph& directedGraph, Flow& flow, unsigned long flowValue);
+  static void applyAugmentingPaths(const Graph& directedGraph, IntegralFlow& flow);
+  static bool findAugmentingPath(const Graph& directedGraph, IntegralFlow& flow);
 };
 
 #endif  // _MAX_FLOW_SOLVER_H_
