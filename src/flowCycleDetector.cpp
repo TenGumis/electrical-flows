@@ -20,8 +20,7 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
          || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
 
-bool FlowCycleDetector::containsFlowCycles(const Graph& directedGraph,
-                                           const UndirectedGraph& undirectedGraph,
+bool FlowCycleDetector::containsFlowCycles(const UndirectedGraph& undirectedGraph,
                                            Flow& flow)
 {
   return std::any_of(undirectedGraph.source->incident.begin(),
@@ -67,7 +66,7 @@ UndirectedEdge* FlowCycleDetector::getOutgoingFlowEdge(const UndirectedNode* con
   return nullptr;
 }
 
-void FlowCycleDetector::removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow)
+void FlowCycleDetector::removeFlowCycles(const UndirectedGraph& undirectedGraph, Flow& flow)
 {
   DynamicTrees dynamicTrees(undirectedGraph.nodes);
   std::vector<bool> deletedEdges(undirectedGraph.edges.size());
@@ -132,6 +131,10 @@ void FlowCycleDetector::removeFlowCycles(const Graph& directedGraph, const Undir
           flow.setFlow(minFlowNode->undirectedEdge, minFlowNode->undirectedNode, 0.0);
           deletedEdges[minFlowNode->undirectedEdge->id] = true;
           dynamicTrees.cut(minFlowNode);
+          if(dynamicTrees.getRoot(nextNode) == nextNode)
+          {
+              break;
+          }
           minFlowNode = dynamicTrees.getMinCostNode(nextNode);
         }
       }

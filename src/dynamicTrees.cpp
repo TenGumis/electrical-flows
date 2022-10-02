@@ -28,7 +28,7 @@ void DynamicTrees::cut(DynamicTreeNode* node)
 
 void DynamicTrees::updatePath(DynamicTreeNode* node, double value)
 {
-  linkCutTree.removeWeightInPath(value, node->undirectedNode->label);
+  linkCutTree.removeWeightInPath(-value, node->undirectedNode->label);
 }
 
 double DynamicTrees::getCost(DynamicTreeNode* node)

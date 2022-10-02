@@ -158,7 +158,7 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
 
   while ((1.0 - primalProgress) * static_cast<double>(flowValue) > 1.0)
   {
-    // gammaCouplingCheck(residualGraph, embedding); DEBUG
+    // gammaCouplingCheck(residualGraph, embedding); // DEBUG
 
     if (isFlowValueInfeasible(residualGraph, demands, embedding, primalProgress))
     {
@@ -216,24 +216,26 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
                                               const UndirectedGraph& undirectedGraph,
                                               Flow& flow)
 {
-  for (const auto& edge : directedGraph.edges)
+  for (const auto& directedEdge : directedGraph.edges)
   {
-    assert(edge->undirectedEquivalent);
+    assert(directedEdge->undirectedEquivalent);
+    auto undirectedEdge = directedEdge->undirectedEquivalent;
 
-    auto targetEdge = undirectedGraph.targetEdges[edge->from->label];
-    flow.updateFlow(targetEdge, undirectedGraph.target, edge->capacity);
+    auto targetEdge = undirectedGraph.targetEdges[undirectedEdge->endpoints.first->label];
+    flow.updateFlow(targetEdge, undirectedGraph.target, undirectedEdge->capacity);
 
-    flow.updateFlow(edge->undirectedEquivalent, edge->from->undirectedEquivalent, edge->capacity);
+    flow.updateFlow(undirectedEdge, undirectedEdge->endpoints.first, undirectedEdge->capacity);
 
-    auto sourceEdge = undirectedGraph.sourceEdges[edge->to->label];
-    flow.updateFlow(sourceEdge, edge->to->undirectedEquivalent, edge->capacity);
+    auto sourceEdge = undirectedGraph.sourceEdges[undirectedEdge->endpoints.second->label];
+    flow.updateFlow(sourceEdge, undirectedEdge->endpoints.second, undirectedEdge->capacity);
   }
 
-  if (FlowCycleDetector::containsFlowCycles(directedGraph, undirectedGraph, flow))
-  {
-    FlowCycleDetector::removeFlowCycles(directedGraph, undirectedGraph, flow);
-  }
   flow.scaleDown();
+  if (FlowCycleDetector::containsFlowCycles(undirectedGraph, flow))
+  {
+    FlowCycleDetector::removeFlowCycles(undirectedGraph, flow);
+  }
+
 
   Flow newFlow(directedGraph.edges.size());
   for (const auto& edge : directedGraph.edges)

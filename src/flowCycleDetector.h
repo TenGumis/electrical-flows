@@ -12,8 +12,8 @@ class UndirectedEdge;
 class FlowCycleDetector
 {
  public:
-  static bool containsFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
-  static void removeFlowCycles(const Graph& directedGraph, const UndirectedGraph& undirectedGraph, Flow& flow);
+  static bool containsFlowCycles(const UndirectedGraph& undirectedGraph, Flow& flow);
+  static void removeFlowCycles(const UndirectedGraph& undirectedGraph, Flow& flow);
 
  private:
   static bool hasOutgoingFlow(const UndirectedNode* undirectedNode,
