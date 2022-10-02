@@ -41,7 +41,14 @@ In project directory run:
 > ./electrical-flows 
 ```
 
-Examples of input could be found in **in** and **in2** files.
+Program takes input from *stdin* in format:
+
+* The first line is an integer **t**, indicating the number of test cases.
+* The second line contains integers **n** and **m**, separated by space, indicating the number of nodes and edges respectively.
+* The next *m* consecutive lines consist of three numbers **a**, **b** and **u** sparated by space where **a** and **b** are begin and end respectively of the directed edge and *u* is a capacity.
+* Last line contains integers **s** and **t**, separated by space, indicating the number of source and destination node respectively.
+
+Input examples can be found in the **test** directory in files with prefix **in**. Expected outputs can be found in the corresponding **out** file.
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)

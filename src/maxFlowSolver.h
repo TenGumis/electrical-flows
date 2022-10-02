@@ -15,6 +15,10 @@ class MaxFlowSolver
  private:
   [[maybe_unused]] static bool gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& embedding);
   static double getAbsoluteStepSize(double primalProgress, unsigned int numberOfEdges);
+  static double getStepSize(const ResidualGraph& residualGraph,
+                            const std::vector<double>& potentials,
+                            const std::vector<double>& resistances);
+  static double l4norm(const std::vector<double>& vector);
   static double getPrimalProgress(const UndirectedGraph& undirectedGraph, const Flow& flow, double flowValue);
   static double getEtaValue(unsigned int maxCapacity, unsigned int numberOfEdges);
   static bool isEarlyTerminationPossible(double primalProgress,

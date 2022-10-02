@@ -67,6 +67,7 @@ inline size_t NNode::getSize(NNode* vertex) {
 }
 
 inline double NNode::getMin(NNode* vertex) {
+    NNode::push(vertex);
     return (vertex ? vertex->subtreeMinWeight - vertex->removedWeightValue : INF);
 }
 

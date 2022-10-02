@@ -20,8 +20,7 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
          || std::fabs(x - y) < std::numeric_limits<T>::min();
 }
 
-bool FlowCycleDetector::containsFlowCycles(const UndirectedGraph& undirectedGraph,
-                                           Flow& flow)
+bool FlowCycleDetector::containsFlowCycles(const UndirectedGraph& undirectedGraph, Flow& flow)
 {
   return std::any_of(undirectedGraph.source->incident.begin(),
                      undirectedGraph.source->incident.end(),
@@ -131,9 +130,9 @@ void FlowCycleDetector::removeFlowCycles(const UndirectedGraph& undirectedGraph,
           flow.setFlow(minFlowNode->undirectedEdge, minFlowNode->undirectedNode, 0.0);
           deletedEdges[minFlowNode->undirectedEdge->id] = true;
           dynamicTrees.cut(minFlowNode);
-          if(dynamicTrees.getRoot(nextNode) == nextNode)
+          if (dynamicTrees.getRoot(nextNode) == nextNode)
           {
-              break;
+            break;
           }
           minFlowNode = dynamicTrees.getMinCostNode(nextNode);
         }

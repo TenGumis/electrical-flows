@@ -27,8 +27,35 @@ typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type almost_
 
 double MaxFlowSolver::getAbsoluteStepSize(const double primalProgress, const unsigned int numberOfEdges)
 {
-  double C_eps = 200;
-  return (1 - primalProgress) / (33 * sqrt(C_eps * static_cast<double>(numberOfEdges)));
+  double C_eps = 200.0;
+  return (1.0 - primalProgress) / (33.0 * sqrt(C_eps * static_cast<double>(numberOfEdges)));
+}
+
+double MaxFlowSolver::l4norm(const std::vector<double>& vector)
+{
+  double norm = 0;
+  for (auto elem : vector)
+  {
+    norm += elem * elem * elem * elem;
+  }
+  return std::pow(norm, 1.0 / 4.0);
+}
+
+double MaxFlowSolver::getStepSize(const ResidualGraph& residualGraph,
+                                  const std::vector<double>& potentials,
+                                  const std::vector<double>& resistances)
+{
+  std::vector<double> congestion(residualGraph.graph.edges.size());
+
+  for (unsigned int i = 0; i < residualGraph.graph.edges.size(); i++)
+  {
+    auto edge = residualGraph.graph.edges[i];
+    double inducedFlow = (potentials[edge->endpoints.second->label] - potentials[edge->endpoints.first->label]) /
+                         resistances[edge->id];
+    congestion[i] = inducedFlow / residualGraph.getSymmetricalResidualCapacity(edge);
+  }
+
+  return 1.0 / (33.0 * l4norm(congestion));
 }
 
 [[maybe_unused]] bool MaxFlowSolver::gammaCouplingCheck(const ResidualGraph& residualGraph, const Embedding& embedding)
@@ -178,7 +205,8 @@ MaxFlowResult MaxFlowSolver::computeMaxFlowWithPreconditioning(const UndirectedG
       auto electricalFlow = ElectricalFlow(residualGraph);
       auto potentials = electricalFlow.computePotentials(undirectedGraph, demands);
 
-      double stepSize = getAbsoluteStepSize(primalProgress, undirectedGraph.edges.size());
+      auto stepSize = getStepSize(residualGraph, potentials, electricalFlow.resistances);
+      assert(stepSize >= getAbsoluteStepSize(primalProgress, undirectedGraph.edges.size()));
       flow.update(undirectedGraph, stepSize, potentials, electricalFlow.resistances);
       embedding.update(undirectedGraph, stepSize, potentials);
     }
@@ -235,7 +263,6 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
   {
     FlowCycleDetector::removeFlowCycles(undirectedGraph, flow);
   }
-
 
   Flow newFlow(directedGraph.edges.size());
   for (const auto& edge : directedGraph.edges)
