@@ -246,16 +246,30 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
 {
   for (const auto& directedEdge : directedGraph.edges)
   {
-    assert(directedEdge->undirectedEquivalent);
-    auto undirectedEdge = directedEdge->undirectedEquivalent;
+    if (directedEdge->undirectedEquivalent)
+    {
+      auto undirectedEdge = directedEdge->undirectedEquivalent;
 
-    auto targetEdge = undirectedGraph.targetEdges[undirectedEdge->endpoints.first->label];
-    flow.updateFlow(targetEdge, undirectedGraph.target, undirectedEdge->capacity);
+      auto targetEdge = undirectedGraph.targetEdges[undirectedEdge->endpoints.first->label];
+      flow.updateFlow(targetEdge, undirectedGraph.target, directedEdge->capacity);
 
-    flow.updateFlow(undirectedEdge, undirectedEdge->endpoints.first, undirectedEdge->capacity);
+      flow.updateFlow(undirectedEdge, undirectedEdge->endpoints.first, directedEdge->capacity);
 
-    auto sourceEdge = undirectedGraph.sourceEdges[undirectedEdge->endpoints.second->label];
-    flow.updateFlow(sourceEdge, undirectedEdge->endpoints.second, undirectedEdge->capacity);
+      auto sourceEdge = undirectedGraph.sourceEdges[undirectedEdge->endpoints.second->label];
+      flow.updateFlow(sourceEdge, undirectedEdge->endpoints.second, directedEdge->capacity);
+    }
+    else
+    {
+      auto undirectedEdge = undirectedGraph.getMappedEquivalent(directedEdge.get());
+
+      auto targetEdge = undirectedGraph.targetEdges[undirectedEdge->endpoints.second->label];
+      flow.updateFlow(targetEdge, undirectedGraph.target, directedEdge->capacity);
+
+      flow.updateFlow(undirectedEdge, undirectedEdge->endpoints.second, directedEdge->capacity);
+
+      auto sourceEdge = undirectedGraph.sourceEdges[undirectedEdge->endpoints.first->label];
+      flow.updateFlow(sourceEdge, undirectedEdge->endpoints.first, directedEdge->capacity);
+    }
   }
 
   flow.scaleDown();
@@ -267,7 +281,17 @@ void MaxFlowSolver::getDirectedFractionalFlow(const Graph& directedGraph,
   Flow newFlow(directedGraph.edges.size());
   for (const auto& edge : directedGraph.edges)
   {
-    newFlow.setFlow(edge.get(), flow.getFlow(edge->undirectedEquivalent, edge->undirectedEquivalent->endpoints.first));
+    if (edge->undirectedEquivalent)
+    {
+      newFlow.setFlow(
+              edge.get(),
+              std::max(flow.getFlow(edge->undirectedEquivalent, edge->undirectedEquivalent->endpoints.first), 0.0));
+    }
+    else
+    {
+      auto undirectedEdge = undirectedGraph.getMappedEquivalent(edge.get());
+      newFlow.setFlow(edge.get(), std::max(flow.getFlow(undirectedEdge, undirectedEdge->endpoints.second), 0.0));
+    }
   }
   flow = newFlow;
 }

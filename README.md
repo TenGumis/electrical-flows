@@ -1,6 +1,6 @@
 # Maximum Flow algorithm with Electrical Flows
 
-This project is an implementation of the algorithm $\tilde{O}(m^{\frac{10}{7}}U^\frac{1}{7})$-time algorithm, proposed by **Madry** in [*Computing maximum flow with augmenting electrical flows*](https://dblp.org/rec/journals/corr/Madry16). It is a part of the thesis which could be treated as an implementation guide. The thesis contains a theory overview with all important references and a pretty deep description of the implementation.
+This project is an implementation of the algorithm $\tilde{O}(m^{\frac{10}{7}}U^\frac{1}{7})$-time algorithm, proposed by **Aleksander Mądry** in [*Computing maximum flow with augmenting electrical flows*](https://dblp.org/rec/journals/corr/Madry16). It is a part of the thesis which could be treated as an implementation guide. The thesis contains a theory overview with all important references and a pretty deep description of the implementation.
 
 Code is written in **C++** language using [CMake](https://cmake.org/) tool for building. The project could be used both as code that is part of another program and as a standalone application.
 
