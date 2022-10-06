@@ -6,6 +6,7 @@
 #include "undirectedNode.h"
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 class UndirectedGraph
@@ -25,14 +26,22 @@ class UndirectedGraph
   void addPreconditioningEdges();
   void removePreconditioningEdges();
   [[nodiscard]] unsigned long getMaxCapacity() const;
+  bool containsOppositeEquivalent(const Edge* edge) const;
+  UndirectedEdge* getMappedEquivalent(const Edge* edge) const;
 
  private:
+  std::vector<std::unordered_map<unsigned int, UndirectedEdge*>> edgeMapping;
+
   static void updateContractedEdge(UndirectedGraph& undirectedGraph,
                                    std::vector<UndirectedEdge*>& contractedEdges,
                                    int label,
                                    std::pair<UndirectedNode*, UndirectedNode*> newEndpoints,
                                    int capacity,
-                                   int& id);
+                                   unsigned int& edgeIdCounter);
+  static void addSourceTargetEdges(UndirectedGraph& undirectedGraph,
+                                   std::pair<UndirectedNode*, UndirectedNode*>& endpoints,
+                                   unsigned int capacity,
+                                   unsigned int& edgeIdCounter);
   void setSourceAndTarget(UndirectedNode* source, UndirectedNode* newTarget);
 };
 
