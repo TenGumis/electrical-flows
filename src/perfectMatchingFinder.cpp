@@ -1,7 +1,8 @@
 #include "perfectMatchingFinder.h"
 
+#include <cassert>
 #include <random>
-#include <unordered_map>
+#include <unordered_set>
 
 PerfectMatchingFinder::PerfectMatchingFinder(RandomnessProvider& randomnessProvider)
         : randomnessProvider(randomnessProvider)
@@ -56,6 +57,7 @@ void PerfectMatchingFinder::find(MatchingGraph& matchingGraph)
     {
       path.clear();
     }
+    path = removePathCycles(path);
     updateMatches(path, matches, matchedEdges, superNodes);
     numberOfSteps++;
   }
@@ -89,7 +91,7 @@ MatchingEdge* PerfectMatchingFinder::sampleOutEdge(MatchingNode* currentNode)
 
 bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode,
                                           unsigned int stepsLimit,
-                                          SuperNodePairs& superNodes,
+                                          const SuperNodePairs& superNodes,
                                           std::list<MatchingEdge*>& path)
 {
   auto currentEdge = sampleOutEdge(startNode);
@@ -103,7 +105,7 @@ bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode,
     {
       return true;
     }
-    auto superNodeP = superNodes[currentNodeQ];
+    auto superNodeP = superNodes.at(currentNodeQ);
     auto nextEdge = sampleOutEdge(superNodeP);
     auto nextNodeQ = nextEdge->qNode;
     path.push_back(nextEdge);
@@ -114,27 +116,49 @@ bool PerfectMatchingFinder::truncatedWalk(MatchingNode* startNode,
   return false;
 }
 
+std::list<MatchingEdge*> PerfectMatchingFinder::removePathCycles(const std::list<MatchingEdge*>& path)
+{
+  std::list<MatchingEdge*> result;
+  std::unordered_set<MatchingNode*> visitedNodeQ;
+  for (const auto edge : path)
+  {
+    if (visitedNodeQ.contains(edge->qNode))
+    {
+      while (result.back()->qNode != edge->qNode)
+      {
+        visitedNodeQ.erase(result.back()->qNode);
+        result.pop_back();
+      }
+    }
+    else
+    {
+      visitedNodeQ.insert(edge->qNode);
+      result.push_back(edge);
+    }
+  }
+
+  return result;
+}
+
 void PerfectMatchingFinder::updateMatches(const std::list<MatchingEdge*>& path,
                                           MatchingPairs& matches,
                                           MatchingPairsEdges& matchedEdges,
                                           SuperNodePairs& superNodes)
 {
   auto currentEdge = path.begin();
-  while (true)
+  while (currentEdge != path.end())
   {
+    matches.erase((*currentEdge)->pNode);
+    superNodes.erase((*currentEdge)->qNode);
+    matchedEdges.erase((*currentEdge)->pNode);
+
     auto currentNodeQ = (*currentEdge)->qNode;
     auto currentNodeP = (*currentEdge)->pNode;
+
     matches[currentNodeP] = currentNodeQ;
     superNodes[currentNodeQ] = currentNodeP;
     matchedEdges[currentNodeP] = *currentEdge;
 
-    auto nextEdge = std::next(currentEdge);
-    if (nextEdge == path.end())
-    {
-      break;
-    }
-    matches.erase((*nextEdge)->pNode);
-    matchedEdges.erase((*nextEdge)->pNode);
-    currentEdge = nextEdge;
+    currentEdge = std::next(currentEdge);
   }
 }

@@ -28,12 +28,15 @@ class PerfectMatchingFinder
   MatchingEdge* sampleOutEdge(MatchingNode* currentNode);
   bool truncatedWalk(MatchingNode* matchingNode,
                      unsigned int stepsLimit,
-                     SuperNodePairs& superNodes,
+                     const SuperNodePairs& superNodes,
                      std::list<MatchingEdge*>& path);
+  static std::list<MatchingEdge*> removePathCycles(const std::list<MatchingEdge*>& path);
   static void updateMatches(const std::list<MatchingEdge*>& path,
                             MatchingPairs& matches,
                             MatchingPairsEdges& matchedEdges,
                             SuperNodePairs& superNodes);
+
+  static bool containsValue(SuperNodePairs& superNodes, MatchingNode* matchingNode);
 };
 
 #endif  // _PERFECT_MATCHING_FINDER_H_
